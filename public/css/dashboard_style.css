@@ -1,0 +1,16 @@
+.dashboard-header {
+  background: linear-gradient(to right, #007bff, #00c853);
+  color: white;
+  padding: 40px 0;
+  border-radius: 10px;
+}
+
+.card {
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+
+.stat-icon {
+  font-size: 2rem;
+  color: #007bff;
+}

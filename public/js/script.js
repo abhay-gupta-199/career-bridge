@@ -1,0 +1,1 @@
+console.log('Career Bridge frontend scripts loaded...');
