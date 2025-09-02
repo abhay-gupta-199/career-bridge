@@ -11,16 +11,94 @@
 
   <div class="container mt-5">
     <h2 class="text-center">Create Your Account</h2>
+
     <% if (typeof error !== 'undefined' && error) { %>
       <div class="alert alert-danger mt-3"><%= error %></div>
     <% } %>
+
     <form action="/auth/signup" method="POST" class="mt-4 col-md-6 mx-auto">
+      <!-- Name & Email -->
       <input name="name" type="text" class="form-control mb-3" placeholder="Full Name" required>
       <input name="email" type="email" class="form-control mb-3" placeholder="Email" required>
+
+      <!-- College Details -->
+      <input name="college" type="text" class="form-control mb-3" placeholder="College Name" required>
+      <input name="branch" type="text" class="form-control mb-3" placeholder="Branch" required>
+      <input name="course" type="text" class="form-control mb-3" placeholder="Course" required>
+      <input name="passout_year" type="number" class="form-control mb-3" placeholder="Year of Passout" required min="1900" max="2100">
+
+      <!-- Skills Section -->
+      <label>Skills</label>
+      <div class="input-group mb-3">
+        <input id="skillInput" type="text" class="form-control" placeholder="Enter a skill">
+        <button type="button" id="addSkillBtn" class="btn btn-secondary">Add</button>
+      </div>
+      <div id="skillsList" class="mb-3"></div>
+      <input type="hidden" name="skills" id="skillsHidden" value="">
+
+      <!-- Certifications Section -->
+      <label>Certifications</label>
+      <div class="input-group mb-3">
+        <input id="certInput" type="text" class="form-control" placeholder="Enter a certification">
+        <button type="button" id="addCertBtn" class="btn btn-secondary">Add</button>
+      </div>
+      <div id="certsList" class="mb-3"></div>
+      <input type="hidden" name="certifications" id="certsHidden" value="">
+
+      <!-- Password -->
       <input name="password" type="password" class="form-control mb-3" placeholder="Password" required>
+
       <button type="submit" class="btn btn-primary w-100">Sign Up</button>
     </form>
   </div>
+
+  <script>
+    // Skills
+    const addSkillBtn = document.getElementById('addSkillBtn');
+    const skillInput = document.getElementById('skillInput');
+    const skillsList = document.getElementById('skillsList');
+    const skillsHidden = document.getElementById('skillsHidden');
+    let skillsArray = [];
+
+    function addSkill() {
+      const skill = skillInput.value.trim();
+      if(skill && !skillsArray.includes(skill)) {
+        skillsArray.push(skill);
+        const skillBadge = document.createElement('span');
+        skillBadge.className = 'badge bg-primary me-2 mb-2';
+        skillBadge.textContent = skill;
+        skillsList.appendChild(skillBadge);
+        skillsHidden.value = skillsArray.join(',');
+        skillInput.value = '';
+      }
+    }
+
+    addSkillBtn.addEventListener('click', addSkill);
+    skillInput.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); addSkill(); } });
+
+    // Certifications
+    const addCertBtn = document.getElementById('addCertBtn');
+    const certInput = document.getElementById('certInput');
+    const certsList = document.getElementById('certsList');
+    const certsHidden = document.getElementById('certsHidden');
+    let certsArray = [];
+
+    function addCert() {
+      const cert = certInput.value.trim();
+      if(cert && !certsArray.includes(cert)) {
+        certsArray.push(cert);
+        const certBadge = document.createElement('span');
+        certBadge.className = 'badge bg-success me-2 mb-2';
+        certBadge.textContent = cert;
+        certsList.appendChild(certBadge);
+        certsHidden.value = certsArray.join(',');
+        certInput.value = '';
+      }
+    }
+
+    addCertBtn.addEventListener('click', addCert);
+    certInput.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); addCert(); } });
+  </script>
 
   <%- include('partials/footer') %>
 </body>
