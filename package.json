@@ -1,0 +1,20 @@
+{
+  "name": "career-bridge",
+  "version": "1.0.0",
+  "description": "A MERN stack web application for bridging students, colleges, and careers",
+  "main": "index.js",
+  "scripts": {
+    "client": "npm start --prefix client",
+    "server": "npm run dev --prefix server",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "install-client": "cd client && npm install",
+    "install-server": "cd server && npm install",
+    "install-all": "npm run install-server && npm run install-client"
+  },
+  "keywords": ["mern", "react", "nodejs", "mongodb", "career", "education"],
+  "author": "Career Bridge Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
