@@ -4,7 +4,7 @@ import LandingPage from './pages/LandingPage'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import StudentDashboard from './pages/StudentDashboard'
-import CollegeDashboard from './pages/CollegeDashboard'
+import CollegeDashboard from './pages/college/CollegeDashboard'
 import OwnerDashboard from './pages/OwnerDashboard'
 import ProtectedRoute from './components/ProtectedRoute'
 
@@ -25,7 +25,7 @@ function App() {
             } 
           />
           <Route 
-            path="/college/dashboard" 
+            path="/college/dashboard/*" 
             element={
               <ProtectedRoute role="college">
                 <CollegeDashboard />
