@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import Navbar from '../components/Navbar'
 import Sidebar from '../components/Sidebar'
 import axios from 'axios'
 
@@ -158,8 +159,8 @@ const OwnerDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="card">
             <div className="flex items-center">
-              <div className="p-3 bg-primary-100 rounded-lg">
-                <svg className="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
                 </svg>
               </div>
@@ -277,7 +278,7 @@ const OwnerDashboard = () => {
 
       {loading ? (
         <div className="flex justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6">
@@ -299,7 +300,7 @@ const OwnerDashboard = () => {
                   
                   <div className="flex flex-wrap gap-2 mt-4">
                     {job.skillsRequired?.map((skill, index) => (
-                      <span key={index} className="px-3 py-1 bg-primary-100 text-primary-700 text-sm rounded-full">
+                      <span key={index} className="px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-full">
                         {skill}
                       </span>
                     ))}
@@ -376,7 +377,7 @@ const OwnerDashboard = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <div className="flex flex-wrap gap-1">
                       {student.skills?.slice(0, 2).map((skill, index) => (
-                        <span key={index} className="px-2 py-1 bg-primary-100 text-primary-700 text-xs rounded">
+                        <span key={index} className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">
                           {skill}
                         </span>
                       ))}
@@ -454,10 +455,12 @@ const OwnerDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      <Sidebar />
-      
-      <div className="flex-1 flex flex-col">
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      <div className="flex">
+        <Sidebar />
+        
+        <div className="flex-1 flex flex-col">
         <div className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex space-x-4">
@@ -465,7 +468,7 @@ const OwnerDashboard = () => {
                 onClick={() => setActiveTab('dashboard')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium ${
                   activeTab === 'dashboard' 
-                    ? 'bg-primary-100 text-primary-700' 
+                    ? 'bg-blue-100 text-blue-700' 
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
@@ -475,7 +478,7 @@ const OwnerDashboard = () => {
                 onClick={() => setActiveTab('jobs')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium ${
                   activeTab === 'jobs' 
-                    ? 'bg-primary-100 text-primary-700' 
+                    ? 'bg-blue-100 text-blue-700' 
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
@@ -485,7 +488,7 @@ const OwnerDashboard = () => {
                 onClick={() => setActiveTab('students')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium ${
                   activeTab === 'students' 
-                    ? 'bg-primary-100 text-primary-700' 
+                    ? 'bg-blue-100 text-blue-700' 
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
@@ -495,7 +498,7 @@ const OwnerDashboard = () => {
                 onClick={() => setActiveTab('colleges')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium ${
                   activeTab === 'colleges' 
-                    ? 'bg-primary-100 text-primary-700' 
+                    ? 'bg-blue-100 text-blue-700' 
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
@@ -663,6 +666,7 @@ const OwnerDashboard = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   )
 }
