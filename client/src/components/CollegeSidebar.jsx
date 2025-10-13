@@ -19,11 +19,10 @@ const CollegeSidebar = () => {
     <div className="w-64 h-screen bg-gradient-to-b from-blue-50 to-blue-100 text-gray-800 shadow-md flex flex-col border-r border-blue-200">
       {/* Sidebar Header */}
       <div className="p-6 flex flex-col items-center text-center border-b border-blue-200">
-        <div className="flex items-center justify-center w-12 h-12 bg-blue-600 text-white rounded-xl shadow-md">
-          <FaUniversity className="text-xl" />
+        <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 text-white rounded-xl shadow-md">
+          <FaUniversity className="text-xl text-white" />
         </div>
         <h1 className="mt-3 text-lg font-semibold text-blue-800">College Panel</h1>
-
       </div>
 
       {/* Navigation Links */}
@@ -41,8 +40,14 @@ const CollegeSidebar = () => {
               }`
             }
           >
-            <span className="text-base">{link.icon}</span>
-            <span>{link.name}</span>
+            {({ isActive }) => (
+              <>
+                <span className={`text-base ${isActive ? "text-white" : "text-blue-600"}`}>
+                  {link.icon}
+                </span>
+                <span>{link.name}</span>
+              </>
+            )}
           </NavLink>
         ))}
       </nav>
