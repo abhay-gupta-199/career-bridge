@@ -1,178 +1,269 @@
-import Navbar from '../components/Navbar'
-import Footer from '../components/Footer'
+import { motion } from 'framer-motion';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+
+const fadeInUp = {
+  hidden: { opacity: 0, y: 40 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: 'easeOut' } },
+};
+
+const staggerFade = {
+  hidden: { opacity: 0, y: 20 },
+  visible: (i) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.1, duration: 0.6, ease: 'easeOut' },
+  }),
+};
 
 const About = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white text-gray-900 relative overflow-hidden">
       <Navbar />
-      
+
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-blue-50 to-white py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-              About <span className="text-blue-600">Career Bridge</span>
-            </h1>
-            <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              Connecting students, colleges, and careers through innovative technology and personalized experiences.
-            </p>
-          </div>
+      <section className="relative py-32 bg-gradient-to-r from-[#f0f4ff] via-[#d6e0ff] to-[#ffffff] overflow-hidden">
+        {/* Floating soft circles */}
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute w-72 h-72 bg-[#ff6f91]/10 rounded-full top-10 left-10 animate-floatSlow"></div>
+          <div className="absolute w-56 h-56 bg-[#845ec2]/10 rounded-full bottom-20 right-16 animate-floatSlow"></div>
+          <div className="absolute w-96 h-96 bg-[#00c9a7]/10 rounded-full top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-floatSlow"></div>
         </div>
+
+        <div className="max-w-3xl mx-auto px-6 text-center relative z-10">
+          <motion.div
+            variants={fadeInUp}
+            initial="hidden"
+            animate="visible"
+            className="bg-white/90 backdrop-blur-md border border-gray-200 rounded-3xl p-14 shadow-2xl relative overflow-hidden"
+          >
+            {/* Glow effect */}
+            <div className="absolute -inset-1 bg-gradient-to-r from-[#ff6f91] via-[#845ec2] to-[#00c9a7] opacity-20 blur-3xl rounded-3xl animate-glowSlow"></div>
+
+            <motion.h1
+              variants={fadeInUp}
+              initial="hidden"
+              animate="visible"
+              transition={{ duration: 0.8 }}
+              className="text-5xl md:text-6xl font-extrabold mb-6 text-[#10002b] leading-tight relative z-10"
+            >
+              About Career Bridge
+            </motion.h1>
+            <motion.p
+              variants={fadeInUp}
+              initial="hidden"
+              animate="visible"
+              transition={{ delay: 0.2, duration: 0.8 }}
+              className="text-xl md:text-2xl text-gray-700 max-w-2xl mx-auto relative z-10"
+            >
+              Connecting students, colleges, and careers through innovative technology and personalized experiences.
+            </motion.p>
+
+            {/* Call-to-action buttons */}
+            <motion.div
+              variants={fadeInUp}
+              initial="hidden"
+              animate="visible"
+              transition={{ delay: 0.4 }}
+              className="mt-10 flex flex-col sm:flex-row gap-4 justify-center relative z-10"
+            >
+              <a
+                href="/signup"
+                className="bg-[#10002b] text-white font-medium py-3 px-8 rounded-lg hover:bg-[#240046] transition-colors duration-200 text-lg"
+              >
+                Get Started
+              </a>
+              <a
+                href="/login"
+                className="border-2 border-[#10002b] text-[#10002b] font-medium py-3 px-8 rounded-lg hover:bg-[#10002b] hover:text-white transition-colors duration-200 text-lg"
+              >
+                Sign In
+              </a>
+            </motion.div>
+          </motion.div>
+        </div>
+
+        <style>{`
+          @keyframes pulse-slow {
+            0%, 100% { transform: scale(1); opacity: 0.1; }
+            50% { transform: scale(1.05); opacity: 0.2; }
+          }
+          .animate-pulse-slow { animation: pulse-slow 8s ease-in-out infinite; }
+
+          @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+          }
+          .animate-floatSlow { animation: floatSlow 12s ease-in-out infinite; }
+
+          @keyframes glowSlow {
+            0%, 100% { opacity: 0.15; }
+            50% { opacity: 0.3; }
+          }
+          .animate-glowSlow { animation: glowSlow 10s ease-in-out infinite; }
+        `}</style>
       </section>
 
       {/* Mission Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-                Our Mission
-              </h2>
-              <p className="text-lg text-gray-600 mb-6">
-                Career Bridge was born from a simple yet powerful vision: to eliminate the gap between 
-                students seeking opportunities, colleges tracking their success, and companies finding 
-                the right talent. We believe that every student deserves access to personalized career 
-                guidance and opportunities that match their skills and aspirations.
-              </p>
-              <p className="text-lg text-gray-600">
-                Our platform leverages cutting-edge technology to create meaningful connections, 
-                streamline processes, and provide data-driven insights that benefit all stakeholders 
-                in the career ecosystem.
-              </p>
+      <section className="py-24 relative bg-gradient-to-r from-[#f5f5ff] to-[#e0e0ff]">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <motion.div
+            variants={fadeInUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+          >
+            <h2 className="text-3xl md:text-4xl font-bold text-[#10002b] mb-6">Our Mission</h2>
+            <p className="text-gray-700 mb-4">
+              Career Bridge was born to eliminate the gap between students seeking opportunities,
+              colleges tracking their success, and companies finding the right talent.
+            </p>
+            <p className="text-gray-700">
+              We leverage cutting-edge technology to create meaningful connections,
+              streamline processes, and provide data-driven insights for all stakeholders.
+            </p>
+          </motion.div>
+
+          <motion.div
+            variants={fadeInUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="rounded-2xl p-10 bg-white/20 backdrop-blur-md shadow-lg hover:shadow-2xl transition-all duration-300"
+          >
+            <div className="w-16 h-16 bg-[#240046] rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
             </div>
-            <div className="bg-blue-50 rounded-2xl p-8">
-              <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4 text-center">Innovation</h3>
-              <p className="text-gray-600 text-center">
-                We continuously evolve our platform with the latest technologies to provide 
-                the best user experience and most accurate job matching algorithms.
-              </p>
-            </div>
-          </div>
+            <h3 className="text-2xl font-bold text-[#10002b] mb-4 text-center">Innovation</h3>
+            <p className="text-gray-700 text-center">
+              Continuously evolving our platform with the latest technologies for a smooth user experience and accurate job matching.
+            </p>
+          </motion.div>
         </div>
       </section>
 
       {/* Values Section */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Our Core Values
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              The principles that guide everything we do at Career Bridge
-            </p>
-          </div>
+      <section className="py-24 relative bg-[#f8f9ff]">
+        <div className="max-w-7xl mx-auto px-6 text-center mb-16">
+          <motion.h2
+            variants={fadeInUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="text-3xl md:text-4xl font-bold text-[#10002b] mb-4"
+          >
+            Our Core Values
+          </motion.h2>
+          <p className="text-xl text-gray-700 max-w-2xl mx-auto">
+            The principles that guide everything we do at Career Bridge
+          </p>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Accessibility</h3>
-              <p className="text-gray-600">
-                We ensure that career opportunities are accessible to all students, regardless of 
-                their background, location, or circumstances.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Quality</h3>
-              <p className="text-gray-600">
-                We maintain the highest standards in job matching, user experience, and data 
-                accuracy to ensure meaningful connections.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Empathy</h3>
-              <p className="text-gray-600">
-                We understand the challenges students face and design our platform with empathy, 
-                making career navigation intuitive and supportive.
-              </p>
-            </div>
-          </div>
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8">
+          {[
+            { title: 'Accessibility', desc: 'Opportunities accessible to all students regardless of background or location.' },
+            { title: 'Quality', desc: 'Maintaining high standards in job matching, UX, and data accuracy.' },
+            { title: 'Empathy', desc: 'Designing our platform with empathy for intuitive career navigation.' }
+          ].map((value, i) => (
+            <motion.div
+              key={i}
+              variants={staggerFade}
+              custom={i}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="p-8 rounded-2xl bg-white/20 backdrop-blur-md shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
+            >
+              <h3 className="text-xl font-bold text-[#10002b] mb-4 text-center">{value.title}</h3>
+              <p className="text-gray-700 text-center">{value.desc}</p>
+            </motion.div>
+          ))}
         </div>
       </section>
 
-      {/* Team Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Our Impact
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Numbers that reflect our commitment to transforming careers
-            </p>
-          </div>
+      {/* Impact Section */}
+      <section className="py-24 relative bg-gradient-to-r from-[#ffffff] via-[#f0f4ff] to-[#e0e0ff]">
+        <div className="max-w-7xl mx-auto px-6 text-center">
+          <motion.h2
+            variants={fadeInUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="text-3xl md:text-4xl font-bold text-[#10002b] mb-4"
+          >
+            Our Impact
+          </motion.h2>
+          <p className="text-xl text-gray-700 mb-12 max-w-2xl mx-auto">
+            Numbers that reflect our commitment to transforming careers
+          </p>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="text-4xl font-bold text-blue-600 mb-2">10,000+</div>
-              <div className="text-gray-600">Students Connected</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-blue-600 mb-2">500+</div>
-              <div className="text-gray-600">Colleges Partnered</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-blue-600 mb-2">5,000+</div>
-              <div className="text-gray-600">Jobs Matched</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-blue-600 mb-2">85%</div>
-              <div className="text-gray-600">Success Rate</div>
-            </div>
+            {[
+              { number: '10,000+', label: 'Students Connected' },
+              { number: '500+', label: 'Colleges Partnered' },
+              { number: '5,000+', label: 'Jobs Matched' },
+              { number: '85%', label: 'Success Rate' }
+            ].map((stat, i) => (
+              <motion.div
+                key={i}
+                variants={staggerFade}
+                custom={i}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                className="text-center p-6 bg-white/20 backdrop-blur-md rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300"
+              >
+                <div className="text-4xl md:text-5xl font-bold text-[#240046] mb-2">{stat.number}</div>
+                <div className="text-gray-700">{stat.label}</div>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="bg-blue-600 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+      <section className="bg-[#10002b] py-16 relative">
+        <div className="max-w-7xl mx-auto px-6 text-center relative z-10">
+          <motion.h2
+            variants={fadeInUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="text-3xl md:text-4xl font-bold text-white mb-4"
+          >
             Ready to Transform Your Career Journey?
-          </h2>
-          <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+          </motion.h2>
+          <motion.p
+            variants={fadeInUp}
+            initial="hidden"
+            whileInView="visible"
+            transition={{ delay: 0.2 }}
+            className="text-xl text-blue-200 mb-8 max-w-2xl mx-auto"
+          >
             Join thousands of students who have already discovered their perfect career path with Career Bridge
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a 
-              href="/signup" 
-              className="bg-white text-blue-600 font-medium py-3 px-8 rounded-lg hover:bg-gray-100 transition-colors duration-200 text-lg"
+          </motion.p>
+          <motion.div
+            variants={fadeInUp}
+            initial="hidden"
+            whileInView="visible"
+            transition={{ delay: 0.4 }}
+            className="flex justify-center"
+          >
+            <a
+              href="/signup"
+              className="bg-white text-[#10002b] font-medium py-3 px-8 rounded-lg hover:bg-gray-100 transition-colors duration-200 text-lg"
             >
               Get Started Today
             </a>
-            <a 
-              href="/login" 
-              className="border-2 border-white text-white font-medium py-3 px-8 rounded-lg hover:bg-white hover:text-blue-600 transition-colors duration-200 text-lg"
-            >
-              Sign In
-            </a>
-          </div>
+          </motion.div>
         </div>
       </section>
 
       <Footer />
     </div>
-  )
-}
+  );
+};
 
-export default About
+export default About;

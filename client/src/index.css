@@ -1,39 +1,149 @@
+/* Import Premium Modern Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Clash+Display:wght@600;700&family=Satoshi:wght@400;500;600&display=swap');
+
+/* Tailwind directives */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Base Styles */
 @layer base {
   html {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Satoshi', system-ui, sans-serif;
+    scroll-behavior: smooth;
   }
-  
+
   body {
-    @apply bg-gray-50 text-gray-900;
+    @apply bg-gradient-to-br from-slate-50 via-white to-blue-50 text-slate-900 antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Clash Display', 'Playfair Display', serif;
+    color: #0f3d7c; /* Deep professional blue */
+    letter-spacing: -0.02em;
+  }
+
+  a {
+    @apply transition-all duration-300;
+  }
+
+  ::selection {
+    background-color: #2563eb;
+    color: #fff;
   }
 }
 
+/* Components */
 @layer components {
+  /* Buttons */
   .btn-primary {
-    @apply bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+    @apply bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 text-white font-semibold py-3 px-8 rounded-xl shadow-lg hover:shadow-blue-400/40 hover:scale-105 transition-all duration-300;
   }
-  
+
   .btn-secondary {
-    @apply bg-white hover:bg-gray-50 text-blue-600 font-medium py-2 px-4 rounded-lg border border-blue-600 transition-colors duration-200;
+    @apply bg-white text-blue-800 font-semibold py-3 px-8 rounded-xl border border-blue-700 hover:bg-blue-50 shadow-sm hover:shadow-md transition-all duration-300;
   }
-  
+
+  /* Cards */
   .card {
-    @apply bg-white rounded-lg shadow-md p-6 border border-gray-200;
+    @apply relative bg-white/80 backdrop-blur-xl rounded-2xl p-8 border border-gray-100 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2;
   }
-  
+
+  /* Inputs */
   .input-field {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+    @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm font-medium;
   }
-  
+
+  /* Sidebar Links */
   .sidebar-link {
-    @apply flex items-center px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors duration-200;
+    @apply flex items-center px-4 py-2 text-gray-700 hover:bg-blue-100 hover:text-blue-800 rounded-lg transition-all duration-200 font-medium;
   }
-  
+
   .sidebar-link.active {
-    @apply bg-blue-100 text-blue-700 font-medium;
+    @apply bg-blue-200 text-blue-900 font-semibold;
+  }
+
+  /* Hero Section Typography */
+  .hero-title {
+    @apply text-5xl md:text-7xl font-bold leading-tight mb-6;
+    background: linear-gradient(90deg, #1e3a8a, #3b82f6, #06b6d4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.03em;
+  }
+
+  .hero-subtitle {
+    @apply text-lg md:text-xl text-gray-700 mb-10 max-w-2xl mx-auto font-medium;
+  }
+
+  /* Section Titles */
+  .section-title {
+    @apply text-4xl md:text-5xl font-extrabold mb-6 text-blue-900;
+    letter-spacing: -0.025em;
+  }
+
+  .section-subtitle {
+    @apply text-lg text-gray-600 max-w-3xl mx-auto mb-12;
+  }
+
+  /* Glow */
+  .glow {
+    text-shadow: 0 0 15px rgba(59, 130, 246, 0.3), 0 0 25px rgba(37, 99, 235, 0.2);
+  }
+
+  /* Glass Background */
+  .glass-bg {
+    @apply bg-white/60 backdrop-blur-xl border border-white/30 shadow-lg;
+  }
+}
+
+/* Animations */
+@layer utilities {
+  .fade-in {
+    opacity: 0;
+    animation: fadeIn 1s ease-out forwards;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .slide-up {
+    opacity: 0;
+    animation: slideUp 1s ease-out forwards;
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .pulse-soft {
+    animation: pulseSoft 3s infinite ease-in-out;
+  }
+
+  @keyframes pulseSoft {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.95; transform: scale(1.03); }
+  }
+
+  .hover-glow:hover {
+    box-shadow: 0 0 25px rgba(59, 130, 246, 0.4), 0 0 45px rgba(37, 99, 235, 0.3);
+  }
+
+  .float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .text-gradient {
+    background: linear-gradient(90deg, #1e3a8a, #3b82f6, #06b6d4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
 }

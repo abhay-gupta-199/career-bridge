@@ -1,6 +1,13 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { HiOutlineMail, HiOutlineLockClosed, HiUserCircle } from 'react-icons/hi'
+import { motion } from 'framer-motion'
+
+const fadeInUp = {
+  hidden: { opacity: 0, y: 40 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: 'easeOut' } },
+}
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -38,37 +45,51 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center">
-          <div className="h-12 w-12 bg-primary-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-xl">CB</span>
+    <div className="min-h-screen bg-gradient-to-b from-gray-100 via-gray-200 to-gray-300 flex items-center justify-center py-12 sm:px-6 lg:px-8">
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={fadeInUp}
+        className="bg-gradient-to-br from-purple-100 via-purple-50 to-purple-100 border border-purple-200 rounded-3xl shadow-2xl p-10 w-full max-w-lg"
+      >
+        {/* Welcome Heading */}
+        <h1 className="text-center text-3xl font-extrabold text-[#4B0082] mb-4">
+          Welcome to Career Bridge
+        </h1>
+
+        {/* Logo */}
+        <div className="flex justify-center mb-6">
+          <div className="h-16 w-16 bg-[#4B0082] rounded-xl flex items-center justify-center text-white text-3xl font-bold">
+            CB
           </div>
         </div>
-        <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
+
+        {/* Sign in Heading */}
+        <h2 className="text-center text-2xl font-bold text-[#4B0082] mb-2">
           Sign in to your account
         </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Or{' '}
-          <Link to="/signup" className="font-medium text-primary-600 hover:text-primary-500">
-            create a new account
+        <p className="text-center text-sm text-[#4B0082]/90 mb-6">
+          New here?{' '}
+          <Link to="/signup" className="font-medium text-[#4B0082] hover:text-[#6a1b9a]">
+            Create an account
           </Link>
         </p>
-      </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700">
-                Account Type
-              </label>
+        {/* Form */}
+        <form className="space-y-6" onSubmit={handleSubmit}>
+          {/* Account Type */}
+          <div>
+            <label htmlFor="role" className="block text-sm font-medium text-[#4B0082]">
+              Account Type
+            </label>
+            <div className="relative mt-1">
+              <HiUserCircle className="absolute top-1/2 left-3 -translate-y-1/2 text-[#4B0082]/70 w-5 h-5" />
               <select
                 id="role"
                 name="role"
                 value={formData.role}
                 onChange={handleChange}
-                className="mt-1 input-field"
+                className="w-full pl-10 h-11 border border-purple-300 rounded-md shadow-sm focus:ring-[#4B0082] focus:border-[#4B0082] text-[#4B0082] bg-purple-50"
                 required
               >
                 <option value="student">Student</option>
@@ -76,83 +97,91 @@ const Login = () => {
                 <option value="owner">Administrator</option>
               </select>
             </div>
+          </div>
 
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
-              </label>
-              <div className="mt-1">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="input-field"
-                  placeholder="Enter your email"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <div className="mt-1">
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="input-field"
-                  placeholder="Enter your password"
-                />
-              </div>
-            </div>
-
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
-                {error}
-              </div>
-            )}
-
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Signing in...' : 'Sign in'}
-              </button>
-            </div>
-          </form>
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">New to Career Bridge?</span>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <Link
-                to="/signup"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-primary-600 bg-white hover:bg-gray-50"
-              >
-                Create your account
-              </Link>
+          {/* Email */}
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-[#4B0082]">
+              Email address
+            </label>
+            <div className="relative mt-1">
+              <HiOutlineMail className="absolute top-1/2 left-3 -translate-y-1/2 text-[#4B0082]/70 w-5 h-5" />
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={formData.email}
+                onChange={handleChange}
+                className="w-full pl-10 h-11 border border-purple-300 rounded-md shadow-sm focus:ring-[#4B0082] focus:border-[#4B0082] text-[#4B0082] bg-purple-50"
+                placeholder="you@example.com"
+              />
             </div>
           </div>
+
+          {/* Password */}
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-[#4B0082]">
+              Password
+            </label>
+            <div className="relative mt-1">
+              <HiOutlineLockClosed className="absolute top-1/2 left-3 -translate-y-1/2 text-[#4B0082]/70 w-5 h-5" />
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                value={formData.password}
+                onChange={handleChange}
+                className="w-full pl-10 h-11 border border-purple-300 rounded-md shadow-sm focus:ring-[#4B0082] focus:border-[#4B0082] text-[#4B0082] bg-purple-50"
+                placeholder="Enter your password"
+              />
+            </div>
+          </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
+              {error}
+            </div>
+          )}
+
+          {/* Submit Button */}
+          <div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 rounded-lg bg-[#4B0082] text-white font-medium text-lg hover:bg-[#6a1b9a] transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Signing in...' : 'Sign in'}
+            </button>
+          </div>
+        </form>
+
+        {/* Divider */}
+        <div className="mt-6 relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-purple-300" />
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-gradient-to-r from-purple-100 via-purple-50 to-purple-100 text-[#4B0082]/70">
+              New to Career Bridge?
+            </span>
+          </div>
         </div>
-      </div>
+
+        {/* Signup Button */}
+        <div className="mt-6">
+          <Link
+            to="/signup"
+            className="w-full flex justify-center py-3 rounded-lg border border-[#4B0082] shadow-sm text-sm font-medium text-[#4B0082] bg-white hover:bg-purple-100 hover:text-[#4B0082] transition duration-200 text-lg"
+          >
+            Create your account
+          </Link>
+        </div>
+      </motion.div>
     </div>
   )
 }

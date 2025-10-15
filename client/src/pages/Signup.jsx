@@ -1,6 +1,13 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { HiOutlineMail, HiOutlineLockClosed, HiUserCircle } from 'react-icons/hi'
+import { motion } from 'framer-motion'
+
+const fadeInUp = {
+  hidden: { opacity: 0, y: 40 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: 'easeOut' } },
+}
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -9,12 +16,10 @@ const Signup = () => {
     password: '',
     confirmPassword: '',
     role: 'student',
-    // Student specific fields
     skills: '',
     resume: '',
     college: '',
     graduationYear: '',
-    // College specific fields
     location: '',
     website: '',
     description: '',
@@ -27,10 +32,7 @@ const Signup = () => {
   const navigate = useNavigate()
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    })
+    setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
   const handleSubmit = async (e) => {
@@ -50,12 +52,7 @@ const Signup = () => {
       return
     }
 
-    // Prepare data based on role
-    let userData = {
-      name: formData.name,
-      email: formData.email,
-      password: formData.password
-    }
+    let userData = { name: formData.name, email: formData.email, password: formData.password }
 
     if (formData.role === 'student') {
       userData.skills = formData.skills
@@ -71,47 +68,56 @@ const Signup = () => {
 
     const result = await register(userData, formData.role)
     
-    if (result.success) {
-      navigate(`/${result.user.role}/dashboard`)
-    } else {
-      setError(result.message)
-    }
+    if (result.success) navigate(`/${result.user.role}/dashboard`)
+    else setError(result.message)
     
     setLoading(false)
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center">
-          <div className="h-12 w-12 bg-primary-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-xl">CB</span>
+    <div className="min-h-screen bg-gradient-to-b from-gray-100 via-gray-200 to-gray-300 flex items-center justify-center py-12 sm:px-6 lg:px-8">
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={fadeInUp}
+        className="bg-gradient-to-br from-purple-100 via-purple-50 to-purple-100 border border-purple-200 rounded-3xl shadow-2xl p-10 w-full max-w-lg overflow-hidden"
+      >
+        {/* Heading */}
+        <h1 className="text-center text-3xl font-extrabold text-[#4B0082] mb-4">
+          Welcome to Career Bridge
+        </h1>
+
+        {/* Logo */}
+        <div className="flex justify-center mb-6">
+          <div className="h-16 w-16 bg-[#4B0082] rounded-xl flex items-center justify-center text-white text-3xl font-bold">
+            CB
           </div>
         </div>
-        <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
+
+        {/* Sign up heading */}
+        <h2 className="text-center text-2xl font-bold text-[#4B0082] mb-2">
           Create your account
         </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Or{' '}
-          <Link to="/login" className="font-medium text-primary-600 hover:text-primary-500">
-            sign in to your existing account
+        <p className="text-center text-sm text-[#4B0082]/90 mb-6">
+          Already have an account?{' '}
+          <Link to="/login" className="font-medium text-[#4B0082] hover:text-[#6a1b9a]">
+            Sign in
           </Link>
         </p>
-      </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700">
-                Account Type
-              </label>
+        {/* Form */}
+        <form className="space-y-5" onSubmit={handleSubmit}>
+          {/* Account Type */}
+          <div>
+            <label htmlFor="role" className="block text-sm font-medium text-[#4B0082]">Account Type</label>
+            <div className="relative mt-1">
+              <HiUserCircle className="absolute top-1/2 left-3 -translate-y-1/2 text-[#4B0082]/70 w-5 h-5" />
               <select
                 id="role"
                 name="role"
                 value={formData.role}
                 onChange={handleChange}
-                className="mt-1 input-field"
+                className="w-full pl-10 h-11 border border-purple-300 rounded-md shadow-sm focus:ring-[#4B0082] focus:border-[#4B0082] text-[#4B0082] bg-purple-50"
                 required
               >
                 <option value="student">Student</option>
@@ -119,265 +125,113 @@ const Signup = () => {
                 <option value="owner">Administrator</option>
               </select>
             </div>
+          </div>
 
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                {formData.role === 'college' ? 'College Name' : 'Full Name'}
-              </label>
-              <div className="mt-1">
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="input-field"
-                  placeholder={formData.role === 'college' ? 'Enter college name' : 'Enter your full name'}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
-              </label>
-              <div className="mt-1">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="input-field"
-                  placeholder="Enter your email"
-                />
-              </div>
-            </div>
-
-            {formData.role === 'student' && (
-              <>
-                <div>
-                  <label htmlFor="skills" className="block text-sm font-medium text-gray-700">
-                    Skills (comma-separated)
-                  </label>
-                  <div className="mt-1">
-                    <input
-                      id="skills"
-                      name="skills"
-                      type="text"
-                      value={formData.skills}
-                      onChange={handleChange}
-                      className="input-field"
-                      placeholder="e.g., React, Node.js, Python"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="resume" className="block text-sm font-medium text-gray-700">
-                    Resume Link (URL)
-                  </label>
-                  <div className="mt-1">
-                    <input
-                      id="resume"
-                      name="resume"
-                      type="url"
-                      value={formData.resume}
-                      onChange={handleChange}
-                      className="input-field"
-                      placeholder="https://example.com/resume.pdf"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="college" className="block text-sm font-medium text-gray-700">
-                    College Name
-                  </label>
-                  <div className="mt-1">
-                    <input
-                      id="college"
-                      name="college"
-                      type="text"
-                      value={formData.college}
-                      onChange={handleChange}
-                      className="input-field"
-                      placeholder="Enter your college name"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="graduationYear" className="block text-sm font-medium text-gray-700">
-                    Graduation Year
-                  </label>
-                  <div className="mt-1">
-                    <input
-                      id="graduationYear"
-                      name="graduationYear"
-                      type="number"
-                      value={formData.graduationYear}
-                      onChange={handleChange}
-                      className="input-field"
-                      placeholder="2024"
-                    />
-                  </div>
-                </div>
-              </>
-            )}
-
-            {formData.role === 'college' && (
-              <>
-                <div>
-                  <label htmlFor="location" className="block text-sm font-medium text-gray-700">
-                    Location
-                  </label>
-                  <div className="mt-1">
-                    <input
-                      id="location"
-                      name="location"
-                      type="text"
-                      required
-                      value={formData.location}
-                      onChange={handleChange}
-                      className="input-field"
-                      placeholder="City, State"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="website" className="block text-sm font-medium text-gray-700">
-                    Website
-                  </label>
-                  <div className="mt-1">
-                    <input
-                      id="website"
-                      name="website"
-                      type="url"
-                      value={formData.website}
-                      onChange={handleChange}
-                      className="input-field"
-                      placeholder="https://example.com"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                    Description
-                  </label>
-                  <div className="mt-1">
-                    <textarea
-                      id="description"
-                      name="description"
-                      rows={3}
-                      value={formData.description}
-                      onChange={handleChange}
-                      className="input-field"
-                      placeholder="Brief description of your college"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="establishedYear" className="block text-sm font-medium text-gray-700">
-                    Established Year
-                  </label>
-                  <div className="mt-1">
-                    <input
-                      id="establishedYear"
-                      name="establishedYear"
-                      type="number"
-                      value={formData.establishedYear}
-                      onChange={handleChange}
-                      className="input-field"
-                      placeholder="1990"
-                    />
-                  </div>
-                </div>
-              </>
-            )}
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <div className="mt-1">
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="input-field"
-                  placeholder="Enter your password"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                Confirm Password
-              </label>
-              <div className="mt-1">
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  required
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  className="input-field"
-                  placeholder="Confirm your password"
-                />
-              </div>
-            </div>
-
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
-                {error}
-              </div>
-            )}
-
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Creating account...' : 'Create account'}
-              </button>
-            </div>
-          </form>
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Already have an account?</span>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <Link
-                to="/login"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-primary-600 bg-white hover:bg-gray-50"
-              >
-                Sign in to your account
-              </Link>
+          {/* Name */}
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-[#4B0082]">
+              {formData.role === 'college' ? 'College Name' : 'Full Name'}
+            </label>
+            <div className="relative mt-1">
+              <HiUserCircle className="absolute top-1/2 left-3 -translate-y-1/2 text-[#4B0082]/70 w-5 h-5" />
+              <input
+                id="name"
+                name="name"
+                type="text"
+                required
+                value={formData.name}
+                onChange={handleChange}
+                className="w-full pl-10 h-11 border border-purple-300 rounded-md shadow-sm focus:ring-[#4B0082] focus:border-[#4B0082] text-[#4B0082] bg-purple-50"
+                placeholder={formData.role === 'college' ? 'Enter college name' : 'Enter your full name'}
+              />
             </div>
           </div>
-        </div>
-      </div>
+
+          {/* Email */}
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-[#4B0082]">Email address</label>
+            <div className="relative mt-1">
+              <HiOutlineMail className="absolute top-1/2 left-3 -translate-y-1/2 text-[#4B0082]/70 w-5 h-5" />
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                value={formData.email}
+                onChange={handleChange}
+                className="w-full pl-10 h-11 border border-purple-300 rounded-md shadow-sm focus:ring-[#4B0082] focus:border-[#4B0082] text-[#4B0082] bg-purple-50"
+                placeholder="you@example.com"
+              />
+            </div>
+          </div>
+
+          {/* Conditional Fields */}
+          {formData.role === 'student' && (
+            <>
+              <InputField id="skills" label="Skills (comma-separated)" placeholder="e.g., React, Node.js, Python" value={formData.skills} onChange={handleChange} icon={<HiUserCircle />} />
+              <InputField id="resume" label="Resume Link (URL)" placeholder="https://example.com/resume.pdf" value={formData.resume} onChange={handleChange} icon={<HiUserCircle />} />
+              <InputField id="college" label="College Name" placeholder="Enter your college name" value={formData.college} onChange={handleChange} icon={<HiUserCircle />} />
+              <InputField id="graduationYear" label="Graduation Year" placeholder="2024" type="number" value={formData.graduationYear} onChange={handleChange} icon={<HiUserCircle />} />
+            </>
+          )}
+          {formData.role === 'college' && (
+            <>
+              <InputField id="location" label="Location" placeholder="City, State" value={formData.location} onChange={handleChange} icon={<HiUserCircle />} />
+              <InputField id="website" label="Website" placeholder="https://example.com" value={formData.website} onChange={handleChange} icon={<HiUserCircle />} />
+              <div>
+                <label htmlFor="description" className="block text-sm font-medium text-[#4B0082]">Description</label>
+                <textarea
+                  id="description"
+                  name="description"
+                  rows={3}
+                  value={formData.description}
+                  onChange={handleChange}
+                  className="w-full mt-1 h-20 px-3 py-2 border border-purple-300 rounded-md shadow-sm focus:ring-[#4B0082] focus:border-[#4B0082] text-[#4B0082] bg-purple-50"
+                  placeholder="Brief description of your college"
+                />
+              </div>
+              <InputField id="establishedYear" label="Established Year" placeholder="1990" type="number" value={formData.establishedYear} onChange={handleChange} icon={<HiUserCircle />} />
+            </>
+          )}
+
+          {/* Password */}
+          <InputField id="password" label="Password" type="password" placeholder="Enter your password" value={formData.password} onChange={handleChange} icon={<HiOutlineLockClosed />} />
+          <InputField id="confirmPassword" label="Confirm Password" type="password" placeholder="Confirm your password" value={formData.confirmPassword} onChange={handleChange} icon={<HiOutlineLockClosed />} />
+
+          {error && <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">{error}</div>}
+
+          {/* Submit Button */}
+          <div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 rounded-lg bg-[#4B0082] text-white font-medium text-lg hover:bg-[#6a1b9a] transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Creating account...' : 'Create account'}
+            </button>
+          </div>
+        </form>
+      </motion.div>
     </div>
   )
 }
+
+const InputField = ({ id, label, type='text', placeholder, value, onChange, icon }) => (
+  <div>
+    <label htmlFor={id} className="block text-sm font-medium text-[#4B0082]">{label}</label>
+    <div className="relative mt-1">
+      <span className="absolute top-1/2 left-3 -translate-y-1/2 text-[#4B0082]/70">{icon}</span>
+      <input
+        id={id}
+        name={id}
+        type={type}
+        value={value}
+        onChange={onChange}
+        className="w-full pl-10 h-11 border border-purple-300 rounded-md shadow-sm focus:ring-[#4B0082] focus:border-[#4B0082] text-[#4B0082] bg-purple-50"
+        placeholder={placeholder}
+      />
+    </div>
+  </div>
+)
 
 export default Signup
