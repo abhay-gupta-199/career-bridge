@@ -21,31 +21,41 @@ const About = () => {
     <div className="min-h-screen bg-white text-gray-900 relative overflow-hidden">
       <Navbar />
 
-      {/* Hero Section */}
-      <section className="relative py-32 bg-gradient-to-r from-[#f0f4ff] via-[#d6e0ff] to-[#ffffff] overflow-hidden">
-        {/* Floating soft circles */}
+      {/* Hero Section with Freepik background */}
+      <section
+        className="relative overflow-hidden bg-cover bg-center bg-no-repeat h-[80vh]"
+        style={{
+          backgroundImage:
+            "url('https://img.freepik.com/free-vector/recruiting-professionals-studying-candidate-profiles_1262-21404.jpg?semt=ais_hybrid&w=740&q=80')",
+        }}
+      >
+        {/* Blur overlay */}
         <div className="absolute inset-0 -z-10">
+          <div className="absolute inset-0 bg-black/25 backdrop-blur-md"></div>
+
+          {/* Floating soft circles */}
           <div className="absolute w-72 h-72 bg-[#ff6f91]/10 rounded-full top-10 left-10 animate-floatSlow"></div>
           <div className="absolute w-56 h-56 bg-[#845ec2]/10 rounded-full bottom-20 right-16 animate-floatSlow"></div>
           <div className="absolute w-96 h-96 bg-[#00c9a7]/10 rounded-full top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-floatSlow"></div>
         </div>
 
-        <div className="max-w-3xl mx-auto px-6 text-center relative z-10">
+        {/* Hero Card shifted top-left and smaller */}
+        <div className="absolute top-10 left-6 md:top-16 md:left-12 lg:top-24 lg:left-24 max-w-md">
           <motion.div
             variants={fadeInUp}
             initial="hidden"
             animate="visible"
-            className="bg-white/90 backdrop-blur-md border border-gray-200 rounded-3xl p-14 shadow-2xl relative overflow-hidden"
+            className="bg-white/90 backdrop-blur-md border border-gray-200 rounded-2xl p-10 shadow-2xl relative overflow-hidden"
           >
             {/* Glow effect */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-[#ff6f91] via-[#845ec2] to-[#00c9a7] opacity-20 blur-3xl rounded-3xl animate-glowSlow"></div>
+            <div className="absolute -inset-1 bg-gradient-to-r from-[#ff6f91] via-[#845ec2] to-[#00c9a7] opacity-20 blur-3xl rounded-2xl animate-glowSlow"></div>
 
             <motion.h1
               variants={fadeInUp}
               initial="hidden"
               animate="visible"
               transition={{ duration: 0.8 }}
-              className="text-5xl md:text-6xl font-extrabold mb-6 text-[#10002b] leading-tight relative z-10"
+              className="text-3xl md:text-4xl font-extrabold mb-4 text-[#10002b] leading-tight relative z-10"
             >
               About Career Bridge
             </motion.h1>
@@ -54,7 +64,7 @@ const About = () => {
               initial="hidden"
               animate="visible"
               transition={{ delay: 0.2, duration: 0.8 }}
-              className="text-xl md:text-2xl text-gray-700 max-w-2xl mx-auto relative z-10"
+              className="text-md md:text-lg text-gray-700 relative z-10"
             >
               Connecting students, colleges, and careers through innovative technology and personalized experiences.
             </motion.p>
@@ -65,17 +75,17 @@ const About = () => {
               initial="hidden"
               animate="visible"
               transition={{ delay: 0.4 }}
-              className="mt-10 flex flex-col sm:flex-row gap-4 justify-center relative z-10"
+              className="mt-6 flex flex-col sm:flex-row gap-3 justify-start relative z-10"
             >
               <a
                 href="/signup"
-                className="bg-[#10002b] text-white font-medium py-3 px-8 rounded-lg hover:bg-[#240046] transition-colors duration-200 text-lg"
+                className="bg-[#10002b] text-white font-medium py-2 px-6 rounded-lg hover:bg-[#240046] transition-colors duration-200 text-sm md:text-base"
               >
                 Get Started
               </a>
               <a
                 href="/login"
-                className="border-2 border-[#10002b] text-[#10002b] font-medium py-3 px-8 rounded-lg hover:bg-[#10002b] hover:text-white transition-colors duration-200 text-lg"
+                className="border-2 border-[#10002b] text-[#10002b] font-medium py-2 px-6 rounded-lg hover:bg-[#10002b] hover:text-white transition-colors duration-200 text-sm md:text-base"
               >
                 Sign In
               </a>
@@ -84,12 +94,6 @@ const About = () => {
         </div>
 
         <style>{`
-          @keyframes pulse-slow {
-            0%, 100% { transform: scale(1); opacity: 0.1; }
-            50% { transform: scale(1.05); opacity: 0.2; }
-          }
-          .animate-pulse-slow { animation: pulse-slow 8s ease-in-out infinite; }
-
           @keyframes floatSlow {
             0%, 100% { transform: translateY(0px); }
             50% { transform: translateY(-20px); }

@@ -49,90 +49,7 @@ const Jobs = () => {
       postedDate: "1 day ago",
       logo: "https://via.placeholder.com/60x60/10B981/FFFFFF?text=DF"
     },
-    {
-      id: 3,
-      title: "Data Scientist",
-      company: "Analytics Pro",
-      location: "Seattle, WA",
-      type: "Full-time",
-      salary: "$100k - $150k",
-      matchPercentage: 92,
-      description: "Analyze large datasets and build ML models for actionable insights.",
-      requirements: ["Python", "Machine Learning", "SQL", "TensorFlow", "Statistics"],
-      category: "data",
-      postedDate: "3 days ago",
-      logo: "https://via.placeholder.com/60x60/8B5CF6/FFFFFF?text=AP"
-    },
-    {
-      id: 4,
-      title: "Full Stack Developer",
-      company: "StartupXYZ",
-      location: "Austin, TX",
-      type: "Full-time",
-      salary: "$75k - $110k",
-      matchPercentage: 88,
-      description: "Work on both frontend and backend development for our fast-growing startup.",
-      requirements: ["React", "Node.js", "MongoDB", "Express", "Git"],
-      category: "fullstack",
-      postedDate: "4 days ago",
-      logo: "https://via.placeholder.com/60x60/F59E0B/FFFFFF?text=SX"
-    },
-    {
-      id: 5,
-      title: "UI/UX Designer",
-      company: "Design Studio",
-      location: "Los Angeles, CA",
-      type: "Full-time",
-      salary: "$70k - $100k",
-      matchPercentage: 75,
-      description: "Design beautiful, intuitive interfaces for web and mobile apps.",
-      requirements: ["Figma", "Adobe XD", "Prototyping", "User Research", "CSS"],
-      category: "design",
-      postedDate: "5 days ago",
-      logo: "https://via.placeholder.com/60x60/EF4444/FFFFFF?text=DS"
-    },
-    {
-      id: 6,
-      title: "DevOps Engineer",
-      company: "CloudTech",
-      location: "Remote",
-      type: "Full-time",
-      salary: "$95k - $140k",
-      matchPercentage: 82,
-      description: "Manage cloud infrastructure, CI/CD pipelines, and Kubernetes clusters.",
-      requirements: ["AWS", "Docker", "Kubernetes", "CI/CD", "Linux"],
-      category: "devops",
-      postedDate: "1 day ago",
-      logo: "https://via.placeholder.com/60x60/06B6D4/FFFFFF?text=CT"
-    },
-    {
-      id: 7,
-      title: "Mobile App Developer",
-      company: "AppMasters",
-      location: "Chicago, IL",
-      type: "Full-time",
-      salary: "$85k - $125k",
-      matchPercentage: 90,
-      description: "Develop cross-platform mobile apps using React Native and Flutter.",
-      requirements: ["React Native", "Flutter", "JavaScript", "iOS", "Android"],
-      category: "mobile",
-      postedDate: "2 days ago",
-      logo: "https://via.placeholder.com/60x60/84CC16/FFFFFF?text=AM"
-    },
-    {
-      id: 8,
-      title: "Product Manager",
-      company: "InnovateCorp",
-      location: "Boston, MA",
-      type: "Full-time",
-      salary: "$110k - $160k",
-      matchPercentage: 68,
-      description: "Lead product strategy and coordinate cross-functional teams.",
-      requirements: ["Product Strategy", "Agile", "Analytics", "User Research", "Leadership"],
-      category: "product",
-      postedDate: "6 days ago",
-      logo: "https://via.placeholder.com/60x60/EC4899/FFFFFF?text=IC"
-    }
+    // ...add other jobs here
   ];
 
   const categories = [
@@ -162,14 +79,23 @@ const Jobs = () => {
     <div className="min-h-screen bg-white">
       <Navbar />
 
-      {/* Hero Section */}
-      <section className="relative py-24 bg-gradient-to-r from-[#4e54c8] to-[#8f94fb]">
-        <div className="max-w-3xl mx-auto px-6 text-center">
+      {/* Hero Section with image background */}
+      <section
+        className="relative py-24 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage:
+            "url('https://taggd.in/wp-content/uploads/2022/11/11_White-collar-jobs-and-that-sinking-feeling_1920x590.png')",
+        }}
+      >
+        {/* Blur overlay */}
+        <div className="absolute inset-0 -z-10 bg-black/30 backdrop-blur-md"></div>
+
+        <div className="max-w-7xl mx-auto px-6 relative z-10 flex justify-start">
           <motion.div
             variants={fadeInUp}
             initial="hidden"
             animate="visible"
-            className="bg-white/90 backdrop-blur-md border border-gray-200 rounded-3xl p-12 shadow-2xl"
+            className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-3xl p-12 shadow-2xl w-full max-w-3xl"
           >
             <motion.h1 className="text-4xl md:text-5xl font-extrabold text-[#10002b] mb-4">
               Explore Exciting Careers
