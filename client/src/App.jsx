@@ -10,7 +10,6 @@ import Login from './pages/Login'
 import Signup from './pages/Signup'
 
 // 🎓 Dashboards
-import StudentDashboard from './pages/StudentDashboard'
 import CollegeDashboard from './pages/college/CollegeDashboard'
 
 // 🧩 Owner (Admin) Pages
@@ -22,6 +21,10 @@ import OwnerNotifications from './pages/admin/OwnerNotifications'
 import OwnerFeedback from './pages/admin/OwnerFeedback'
 import OwnerReports from './pages/admin/OwnerReports'
 import OwnerSettings from './pages/admin/OwnerSettings'
+
+// Student Pages
+import StudentDashboard from './pages/student/StudentDashboard'
+import StudentProfile from './pages/student/StudentProfile'
 
 // 🔐 Route Protection
 import ProtectedRoute from './components/ProtectedRoute'
@@ -45,6 +48,16 @@ function App() {
               element={
                 <ProtectedRoute role="student">
                   <StudentDashboard />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* ---------- 🎓 Student Profile ---------- */}
+            <Route
+              path="/student/profile"
+              element={
+                <ProtectedRoute role="student">
+                  <StudentProfile />
                 </ProtectedRoute>
               }
             />

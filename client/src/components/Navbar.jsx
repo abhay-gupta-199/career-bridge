@@ -14,9 +14,9 @@ const Navbar = () => {
 
   return (
     <nav
-      className="sticky top-0 z-50 shadow-md"
+      className="sticky top-0 z-50 shadow-lg"
       style={{
-        background: 'linear-gradient(135deg, #10002b 0%, #240046 100%)',
+        background: 'linear-gradient(135deg, #10002b 0%, #4b006e 60%, #240046 100%)',
       }}
     >
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
@@ -49,28 +49,39 @@ const Navbar = () => {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-6">
-            <Link to="/" className="hover:text-gray-300 px-3 py-2 rounded-md text-base font-medium transition-colors">Home</Link>
-            <Link to="/about" className="hover:text-gray-300 px-3 py-2 rounded-md text-base font-medium transition-colors">About</Link>
-            <Link to="/jobs" className="hover:text-gray-300 px-3 py-2 rounded-md text-base font-medium transition-colors">Jobs</Link>
+            <Link className="hover:text-gray-300 transition-colors px-3 py-2 rounded-md text-base font-medium" to="/">Home</Link>
+            <Link className="hover:text-gray-300 transition-colors px-3 py-2 rounded-md text-base font-medium" to="/about">About</Link>
+            <Link className="hover:text-gray-300 transition-colors px-3 py-2 rounded-md text-base font-medium" to="/jobs">Jobs</Link>
 
             {user ? (
               <div className="flex items-center space-x-3">
-                <Link to={`/${user.role}/dashboard`} className="bg-white text-[#10002b] px-4 py-2 rounded-md text-base font-medium transition-colors hover:bg-gray-100">
+                <Link
+                  to={`/${user.role}/dashboard`}
+                  className="px-4 py-2 rounded-md text-base font-medium bg-white text-[#10002b] hover:bg-gradient-to-r hover:from-[#10002b] hover:via-[#4b006e] hover:to-[#240046] hover:text-white transition-all"
+                >
                   Dashboard
                 </Link>
-                <button onClick={handleLogout} className="hover:text-gray-300 px-3 py-2 rounded-md text-base font-medium transition-colors">
+                <button
+                  onClick={handleLogout}
+                  className="hover:bg-gradient-to-r hover:from-[#10002b] hover:via-[#4b006e] hover:to-[#240046] hover:text-white px-3 py-2 rounded-md text-base font-medium transition-all"
+                >
                   Logout
                 </button>
               </div>
             ) : (
               <div className="flex items-center space-x-3">
-                <Link to="/login" className="hover:text-gray-300 px-3 py-2 rounded-md text-base font-medium transition-colors">Login</Link>
-                <Link to="/signup" className="bg-white text-[#10002b] px-4 py-2 rounded-md text-base font-medium transition-colors hover:bg-gray-100">Sign Up</Link>
+                <Link className="hover:bg-gradient-to-r hover:from-[#10002b] hover:via-[#4b006e] hover:to-[#240046] hover:text-white px-3 py-2 rounded-md text-base font-medium transition-all" to="/login">Login</Link>
+                <Link
+                  to="/signup"
+                  className="px-4 py-2 rounded-md text-base font-medium bg-white text-[#10002b] hover:bg-gradient-to-r hover:from-[#10002b] hover:via-[#4b006e] hover:to-[#240046] hover:text-white transition-all"
+                >
+                  Sign Up
+                </Link>
               </div>
             )}
           </div>
 
-          {/* Mobile menu button */}
+          {/* Mobile Menu Button */}
           <div className="md:hidden">
             <button onClick={() => setIsOpen(!isOpen)} className="focus:outline-none">
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -86,20 +97,35 @@ const Navbar = () => {
 
         {/* Mobile Menu */}
         {isOpen && (
-          <div className="md:hidden mt-2 pb-4 border-t border-white/20 text-white">
-            <Link to="/" className="block px-3 py-2 rounded-md text-base font-medium hover:text-gray-300">Home</Link>
-            <Link to="/about" className="block px-3 py-2 rounded-md text-base font-medium hover:text-gray-300">About</Link>
-            <Link to="/jobs" className="block px-3 py-2 rounded-md text-base font-medium hover:text-gray-300">Jobs</Link>
+          <div className="md:hidden mt-2 pb-4 border-t border-white/20 text-white space-y-1">
+            <Link className="block px-3 py-2 rounded-md text-base font-medium hover:bg-gradient-to-r hover:from-[#10002b] hover:via-[#4b006e] hover:to-[#240046] hover:text-white transition-all" to="/">Home</Link>
+            <Link className="block px-3 py-2 rounded-md text-base font-medium hover:bg-gradient-to-r hover:from-[#10002b] hover:via-[#4b006e] hover:to-[#240046] hover:text-white transition-all" to="/about">About</Link>
+            <Link className="block px-3 py-2 rounded-md text-base font-medium hover:bg-gradient-to-r hover:from-[#10002b] hover:via-[#4b006e] hover:to-[#240046] hover:text-white transition-all" to="/jobs">Jobs</Link>
 
             {user ? (
               <>
-                <Link to={`/${user.role}/dashboard`} className="block bg-white text-[#10002b] px-4 py-2 rounded-md text-base font-medium hover:bg-gray-100 mt-2">Dashboard</Link>
-                <button onClick={handleLogout} className="block w-full text-left px-3 py-2 rounded-md text-base font-medium hover:text-gray-300 mt-2">Logout</button>
+                <Link
+                  to={`/${user.role}/dashboard`}
+                  className="block px-4 py-2 rounded-md text-base font-medium bg-white text-[#10002b] hover:bg-gradient-to-r hover:from-[#10002b] hover:via-[#4b006e] hover:to-[#240046] hover:text-white transition-all mt-2"
+                >
+                  Dashboard
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="block w-full text-left px-3 py-2 rounded-md text-base font-medium hover:bg-gradient-to-r hover:from-[#10002b] hover:via-[#4b006e] hover:to-[#240046] hover:text-white transition-all mt-2"
+                >
+                  Logout
+                </button>
               </>
             ) : (
               <>
-                <Link to="/login" className="block px-3 py-2 rounded-md text-base font-medium hover:text-gray-300 mt-2">Login</Link>
-                <Link to="/signup" className="block bg-white text-[#10002b] px-4 py-2 rounded-md text-base font-medium hover:bg-gray-100 mt-2">Sign Up</Link>
+                <Link className="block px-3 py-2 rounded-md text-base font-medium hover:bg-gradient-to-r hover:from-[#10002b] hover:via-[#4b006e] hover:to-[#240046] hover:text-white transition-all mt-2" to="/login">Login</Link>
+                <Link
+                  to="/signup"
+                  className="block px-4 py-2 rounded-md text-base font-medium bg-white text-[#10002b] hover:bg-gradient-to-r hover:from-[#10002b] hover:via-[#4b006e] hover:to-[#240046] hover:text-white transition-all mt-2"
+                >
+                  Sign Up
+                </Link>
               </>
             )}
           </div>

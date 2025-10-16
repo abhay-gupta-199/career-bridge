@@ -1,83 +1,78 @@
-import { useAuth } from '../contexts/AuthContext'
+import { NavLink } from "react-router-dom";
+import { 
+  FaHome, 
+  FaBriefcase, 
+  FaClipboardList, 
+  FaMapMarkedAlt, 
+  FaBell, 
+  FaUserGraduate, 
+  FaRobot 
+} from "react-icons/fa";
 
-const Sidebar = ({ activeTab, setActiveTab }) => {
-  const { user } = useAuth()
-
-  const studentLinks = [
-    { name: 'Dashboard', icon: '📊', tab: 'dashboard' },
-    { name: 'Jobs', icon: '💼', tab: 'jobs' },
-    { name: 'Applications', icon: '📝', tab: 'applications' },
-    { name: 'Roadmaps', icon: '🗺️', tab: 'roadmaps' },
-    { name: 'Notifications', icon: '🔔', tab: 'notifications' },
-    { name: 'Profile', icon: '👤', tab: 'profile' },
-  ]
-
-  const collegeLinks = [
-    { name: 'Dashboard', icon: '📊', tab: 'dashboard' },
-    { name: 'Students', icon: '👥', tab: 'students' },
-    { name: 'Statistics', icon: '📈', tab: 'statistics' },
-    { name: 'Placements', icon: '🎯', tab: 'placements' },
-    { name: 'Profile', icon: '👤', tab: 'profile' },
-  ]
-
-  const ownerLinks = [
-    { name: 'Dashboard', icon: '📊', tab: 'dashboard' },
-    { name: 'Jobs', icon: '💼', tab: 'jobs' },
-    { name: 'Students', icon: '👥', tab: 'students' },
-    { name: 'Colleges', icon: '🏫', tab: 'colleges' },
-    { name: 'Analytics', icon: '📈', tab: 'analytics' },
-    { name: 'Profile', icon: '👤', tab: 'profile' },
-  ]
-
-  const getLinks = () => {
-    switch (user?.role) {
-      case 'student': return studentLinks
-      case 'college': return collegeLinks
-      case 'owner': return ownerLinks
-      default: return []
-    }
-  }
-
-  const links = getLinks()
+const Sidebar = () => {
+  const links = [
+    { name: "Dashboard", path: "/student/dashboard", icon: <FaHome /> },
+    { name: "Jobs", path: "/student/jobs", icon: <FaBriefcase /> },
+    { name: "Applications", path: "/student/applications", icon: <FaClipboardList /> },
+    { name: "Roadmaps", path: "/student/roadmaps", icon: <FaMapMarkedAlt /> },
+    { name: "AI Recommendations", path: "/student/ai-recommendations", icon: <FaRobot /> },
+    { name: "Notifications", path: "/student/notifications", icon: <FaBell /> },
+    { name: "Profile", path: "/student/profile", icon: <FaUserGraduate /> },
+  ];
 
   return (
-    <div className="bg-white shadow-lg h-screen w-64 flex flex-col">
-      
+    <div className="w-64 h-screen bg-white shadow-lg flex flex-col border-r border-gray-200">
+      {/* Sidebar Header */}
+      <div className="p-6 flex flex-col items-center text-center border-b border-gray-200">
+        <div
+          className="flex items-center justify-center w-14 h-14 rounded-xl shadow-lg"
+          style={{ background: 'linear-gradient(135deg, #10002b 0%, #4b006e 100%)' }}
+        >
+          <FaUserGraduate className="text-white text-2xl" />
+        </div>
+        <h1 className="mt-3 text-lg font-semibold text-gray-900">Student Panel</h1>
+      </div>
 
-      {/* Sidebar Links */}
-      <nav className="flex-1 px-4 py-6 space-y-2">
-        {links.map((link) => (
-          <button
-            key={link.name}
-            onClick={() => setActiveTab(link.tab)}
-            className={`w-full text-left px-4 py-2 rounded-lg font-medium flex items-center ${
-              activeTab === link.tab
-                ? 'bg-blue-100 text-blue-700'
-                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-            }`}
+      {/* Navigation Links */}
+      <nav className="flex-1 mt-4 space-y-2 px-3">
+        {links.map((link, index) => (
+          <NavLink
+            key={index}
+            to={link.path}
+            end
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                isActive
+                  ? "bg-gradient-to-r from-[#10002b] via-[#4b006e] to-[#240046] text-white shadow-lg"
+                  : "text-gray-700 hover:bg-gradient-to-r hover:from-[#f0f0f5] hover:via-[#e0e0f0] hover:to-[#ffffff] hover:text-[#240046]"
+              }`
+            }
           >
-            <span className="text-lg mr-3">{link.icon}</span>
-            {link.name}
-          </button>
+            {({ isActive }) => (
+              <>
+                <span
+                  className="text-lg"
+                  style={isActive ? {
+                    background: 'linear-gradient(135deg, #10002b, #4b006e, #240046)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent'
+                  } : { color: '#4b006e' }}
+                >
+                  {link.icon}
+                </span>
+                <span>{link.name}</span>
+              </>
+            )}
+          </NavLink>
         ))}
       </nav>
 
-      {/* User Info */}
-      <div className="p-4 border-t border-gray-200">
-        <div className="flex items-center space-x-3">
-          <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
-            <span className="text-blue-600 font-medium text-sm">
-              {user?.name?.charAt(0)?.toUpperCase()}
-            </span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">{user?.name}</p>
-            <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
-          </div>
-        </div>
+      {/* Footer */}
+      <div className="p-5 border-t border-gray-200 text-center">
+        <p className="text-xs text-gray-500">© 2025 Career Bridge</p>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Sidebar
+export default Sidebar;

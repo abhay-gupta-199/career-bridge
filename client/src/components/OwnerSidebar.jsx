@@ -13,7 +13,6 @@ import {
 
 const OwnerSidebar = () => {
   const { pathname } = useLocation();
-  const { isDarkMode } = useTheme();
 
   const links = [
     { name: "Dashboard", path: "/owner/dashboard", icon: <FaTachometerAlt /> },
@@ -26,22 +25,24 @@ const OwnerSidebar = () => {
     { name: "Settings", path: "/owner/settings", icon: <FaCog /> },
   ];
 
+  const gradientStyle = {
+    background: 'linear-gradient(135deg, #10002b 0%, #4b006e 50%, #240046 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+  };
+
   return (
-    <aside className={`w-64 h-screen flex flex-col shadow-lg border-r 
-      ${isDarkMode 
-        ? "bg-gray-900 text-gray-200 border-gray-700" 
-        : "bg-gradient-to-b from-blue-50 to-blue-100 text-gray-800 border-blue-200"}`}>
+    <aside className="w-64 h-screen flex flex-col bg-white shadow-lg border-r border-gray-200">
       
       {/* Sidebar Header */}
-      <div className={`p-6 flex flex-col items-center text-center border-b 
-        ${isDarkMode ? "border-gray-700" : "border-blue-200"}`}>
-        <div className={`flex items-center justify-center w-14 h-14 rounded-xl shadow-lg 
-          ${isDarkMode ? "bg-gray-800 text-white" : "bg-gradient-to-br from-blue-500 to-indigo-500 text-white"}`}>
-          <FaTachometerAlt className="text-2xl" />
+      <div className="p-6 flex flex-col items-center text-center border-b border-gray-200">
+        <div
+          className="flex items-center justify-center w-14 h-14 rounded-xl shadow-lg"
+          style={{ background: 'linear-gradient(135deg, #10002b 0%, #4b006e 100%)' }}
+        >
+          <FaTachometerAlt className="text-white text-2xl" />
         </div>
-        <h2 className={`mt-3 text-lg font-semibold ${isDarkMode ? "text-gray-200" : "text-blue-800"}`}>
-          Admin Panel
-        </h2>
+        <h2 className="mt-3 text-lg font-semibold text-gray-900">Admin Panel</h2>
       </div>
 
       {/* Navigation Links */}
@@ -52,24 +53,27 @@ const OwnerSidebar = () => {
             <Link
               key={link.path}
               to={link.path}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 ${
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                 isActive
-                  ? `${isDarkMode ? "bg-gray-700 text-white shadow-md" : "bg-blue-600 text-white shadow-md"}`
-                  : `${isDarkMode ? "text-gray-200 hover:bg-gray-800 hover:text-white" : "text-gray-700 hover:bg-blue-100 hover:text-blue-700"}`
+                  ? "bg-gradient-to-r from-[#10002b] via-[#4b006e] to-[#240046] text-white shadow-lg"
+                  : "text-gray-700 hover:bg-gradient-to-r hover:from-[#f0f0f5] hover:via-[#e0e0f0] hover:to-[#ffffff] hover:text-[#240046]"
               }`}
             >
-              <span className={`text-lg ${isActive ? "text-white" : isDarkMode ? "text-gray-200" : "text-blue-600"}`}>
+              <span
+                className="text-lg"
+                style={isActive ? gradientStyle : { color: '#4b006e' }}
+              >
                 {link.icon}
               </span>
-              <span className="flex-1">{link.name}</span>
+              <span>{link.name}</span>
             </Link>
           );
         })}
       </nav>
 
       {/* Footer */}
-      <div className={`p-5 border-t text-center ${isDarkMode ? "border-gray-700 text-gray-500" : "border-blue-200 text-gray-500"}`}>
-        <p className="text-xs">© 2025 Career Bridge</p>
+      <div className="p-5 border-t border-gray-200 text-center">
+        <p className="text-xs text-gray-500">© 2025 Career Bridge</p>
       </div>
     </aside>
   );

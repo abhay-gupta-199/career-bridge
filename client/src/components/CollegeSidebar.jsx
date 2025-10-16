@@ -15,34 +15,46 @@ const CollegeSidebar = () => {
     { name: "Placements", path: "/college/dashboard/placements", icon: <FaBriefcase /> },
   ];
 
+  const gradientStyle = {
+    background: 'linear-gradient(135deg, #10002b 0%, #4b006e 50%, #240046 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+  };
+
   return (
-    <div className="w-64 h-screen bg-gradient-to-b from-blue-50 to-blue-100 text-gray-800 shadow-md flex flex-col border-r border-blue-200">
+    <div className="w-64 h-screen bg-white shadow-lg flex flex-col border-r border-gray-200">
       {/* Sidebar Header */}
-      <div className="p-6 flex flex-col items-center text-center border-b border-blue-200">
-        <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 text-white rounded-xl shadow-md">
-          <FaUniversity className="text-xl text-white" />
+      <div className="p-6 flex flex-col items-center text-center border-b border-gray-200">
+        <div
+          className="flex items-center justify-center w-14 h-14 rounded-xl shadow-lg"
+          style={{ background: 'linear-gradient(135deg, #10002b 0%, #4b006e 100%)' }}
+        >
+          <FaUniversity className="text-white text-2xl" />
         </div>
-        <h1 className="mt-3 text-lg font-semibold text-blue-800">College Panel</h1>
+        <h1 className="mt-3 text-lg font-semibold text-gray-900">College Panel</h1>
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex-1 mt-4 space-y-1 px-3">
+      <nav className="flex-1 mt-4 space-y-2 px-3">
         {links.map((link, index) => (
           <NavLink
             key={index}
             to={link.path}
             end
             className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+              `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                 isActive
-                  ? "bg-blue-600 text-white shadow-md"
-                  : "text-gray-700 hover:bg-blue-100 hover:text-blue-700"
+                  ? "bg-gradient-to-r from-[#10002b] via-[#4b006e] to-[#240046] text-white shadow-lg"
+                  : "text-gray-700 hover:bg-gradient-to-r hover:from-[#f0f0f5] hover:via-[#e0e0f0] hover:to-[#ffffff] hover:text-[#240046]"
               }`
             }
           >
             {({ isActive }) => (
               <>
-                <span className={`text-base ${isActive ? "text-white" : "text-blue-600"}`}>
+                <span
+                  className="text-lg"
+                  style={isActive ? gradientStyle : { color: '#4b006e' }}
+                >
                   {link.icon}
                 </span>
                 <span>{link.name}</span>
@@ -53,7 +65,7 @@ const CollegeSidebar = () => {
       </nav>
 
       {/* Footer */}
-      <div className="p-5 border-t border-blue-200 text-center">
+      <div className="p-5 border-t border-gray-200 text-center">
         <p className="text-xs text-gray-500">© 2025 Career Bridge</p>
       </div>
     </div>
