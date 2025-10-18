@@ -20,6 +20,7 @@ const StudentDashboard = () => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // Simulate fetching applications from backend
     setTimeout(() => {
       setApplications([
         { id: 1, title: 'Frontend Developer' },
@@ -30,20 +31,19 @@ const StudentDashboard = () => {
     }, 500)
   }, [])
 
+  // Use dynamic data from user if available
   const applicationsData = [
-    { name: 'Applied', value: 3 },
-    { name: 'Shortlisted', value: 1 },
-    { name: 'Rejected', value: 0 },
+    { name: 'Applied', value: applications.length },
+    { name: 'Shortlisted', value: Math.floor(applications.length / 3) },
+    { name: 'Rejected', value: Math.floor(applications.length / 3) },
   ]
 
-  const skillsData = [
-    { name: 'React', value: 1 },
-    { name: 'Node.js', value: 1 },
-    { name: 'Python', value: 1 },
-  ]
+  const skillsData = (user?.skills || []).map((skill, index) => ({
+    name: skill,
+    value: 1, // Each skill counts as 1 for chart
+  }))
 
-  // Light colors only for charts
-  const chartColors = ['#FF8A80', '#80D8FF', '#FFD180']
+  const chartColors = ['#FF8A80', '#80D8FF', '#FFD180', '#A7FFEB', '#FFD6A5']
 
   return (
     <div className="min-h-screen bg-white">
@@ -73,13 +73,14 @@ const StudentDashboard = () => {
               </div>
               <div className="bg-white text-purple-900 rounded-xl p-6 shadow-md flex flex-col items-center transform hover:-translate-y-2 hover:shadow-xl transition-all duration-300 animate-fadeIn delay-400">
                 <p className="text-sm font-semibold uppercase tracking-wide">Profile Completion</p>
-                <p className="text-3xl font-bold mt-2">85%</p>
+                <p className="text-3xl font-bold mt-2">
+                  {user?.profileCompletion || 85}%
+                </p>
               </div>
             </div>
           </div>
 
-          
-          {/* Charts - colorful */}
+          {/* Charts */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-white shadow-md rounded-xl p-5">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Applications Status</h2>
@@ -102,7 +103,7 @@ const StudentDashboard = () => {
               <ResponsiveContainer width="100%" height={250}>
                 <PieChart>
                   <Pie
-                    data={skillsData}
+                    data={skillsData.length > 0 ? skillsData : [{ name: 'No Skills', value: 1 }]}
                     dataKey="value"
                     nameKey="name"
                     cx="50%"
@@ -110,9 +111,11 @@ const StudentDashboard = () => {
                     outerRadius={80}
                     label
                   >
-                    {skillsData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
-                    ))}
+                    {(skillsData.length > 0 ? skillsData : [{ name: 'No Skills', value: 1 }]).map(
+                      (entry, index) => (
+                        <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
+                      )
+                    )}
                   </Pie>
                   <Tooltip />
                 </PieChart>

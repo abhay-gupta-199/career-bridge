@@ -62,19 +62,47 @@ const Login = () => {
   const { login } = useAuth()
   const navigate = useNavigate()
 
+  // OTP is handled on a dedicated page (/verify-otp). Keep inline mode disabled.
+  const otpMode = false
+
   const animatedText = useTypewriter('CareerBridge', 200) // professional typing effect
 
   const handleChange = e => setFormData({ ...formData, [e.target.name]: e.target.value })
+
+  // no inline OTP mode: redirect to dedicated VerifyOtp page on requiresOtp
 
   const handleSubmit = async e => {
     e.preventDefault()
     setLoading(true)
     setError('')
+
+    // If we're already in OTP mode, don't call password login here
+    if (otpMode) {
+      setLoading(false)
+      return
+    }
+
     const result = await login(formData.email, formData.password, formData.role)
-    if (result.success) navigate(`/${result.user.role}/dashboard`)
-    else setError(result.message)
+    if (result.success) {
+      navigate(`/${result.user.role}/dashboard`)
+      setLoading(false)
+      return
+    }
+
+    // Backend indicates 2FA: redirect to dedicated OTP page and save pending info to sessionStorage
+    if (result.requiresOtp) {
+      sessionStorage.setItem('pendingOtp', JSON.stringify({ email: formData.email, role: formData.role }))
+      navigate('/verify-otp')
+      setLoading(false)
+      return
+    }
+
+    setError(result.message)
+
     setLoading(false)
   }
+
+  
 
   // Generate floating bubbles
   const bubbles = Array.from({ length: 25 }).map((_, i) => ({

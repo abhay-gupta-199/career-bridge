@@ -27,6 +27,11 @@ const ownerSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   }
+  ,
+  twoFactorEnabled: {
+    type: Boolean,
+    default: false
+  }
 }, {
   timestamps: true
 });

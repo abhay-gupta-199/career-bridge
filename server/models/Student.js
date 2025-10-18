@@ -34,6 +34,10 @@ const studentSchema = new mongoose.Schema({
   graduationYear: {
     type: Number
   },
+  twoFactorEnabled: {
+    type: Boolean,
+    default: false
+  },
   isPlaced: {
     type: Boolean,
     default: false

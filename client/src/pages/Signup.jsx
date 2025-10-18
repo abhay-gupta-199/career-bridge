@@ -74,6 +74,8 @@ const Signup = () => {
   const { register } = useAuth()
   const navigate = useNavigate()
 
+  // OTP verification is handled on the dedicated /verify-otp page
+
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value })
 
   const handleSubmit = async (e) => {
@@ -108,12 +110,26 @@ const Signup = () => {
     }
 
     const result = await register(userData, formData.role)
-    
-    if (result.success) navigate(`/${result.user.role}/dashboard`)
-    else setError(result.message)
-    
+
+    if (result.success) {
+      navigate(`/${result.user.role}/dashboard`)
+      setLoading(false)
+      return
+    }
+
+    if (result.requiresOtp) {
+      // Store pending registration info for the VerifyOtp page to pick up
+      sessionStorage.setItem('pendingOtp', JSON.stringify({ email: formData.email, role: formData.role }))
+      navigate('/verify-otp')
+      setLoading(false)
+      return
+    }
+
+    setError(result.message)
     setLoading(false)
   }
+
+  // OTP flows are handled on /verify-otp; signup redirects there when required
 
   const animatedText = useTypewriter('Welcome to Career Bridge', 150) // Typewriter effect
 

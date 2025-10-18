@@ -26,43 +26,48 @@ export const AuthProvider = ({ children }) => {
     setLoading(false)
   }, [])
 
+  // Password-based login
   const login = async (email, password, role) => {
     try {
-      const response = await axios.post('/api/auth/login', {
-        email,
-        password,
-        role
-      })
+  const response = await axios.post('/api/auth/login', { email, password, role }, { withCredentials: true })
+      // If backend indicates 2FA is required, return that to caller so UI can prompt for OTP
+      if (response.data?.requiresOtp) {
+        return { success: false, requiresOtp: true, message: response.data.message }
+      }
 
       const { token, user: userData } = response.data
-      
+
       localStorage.setItem('token', token)
       localStorage.setItem('user', JSON.stringify(userData))
-      
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
       setUser(userData)
-      
+
       return { success: true, user: userData }
     } catch (error) {
-      return { 
-        success: false, 
-        message: error.response?.data?.message || 'Login failed' 
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Login failed'
       }
     }
   }
 
+  // Password-based registration
   const register = async (userData, role) => {
     try {
-      const response = await axios.post(`/api/auth/register/${role}`, userData)
+      const response = await axios.post(`/api/auth/register/${role}`, userData, { withCredentials: true })
+
+      if (response.data?.requiresOtp) {
+        // Caller should prompt user for OTP; server stores pending registration in session
+        return { success: false, requiresOtp: true, message: response.data.message }
+      }
 
       const { token, user: newUser } = response.data
-      
+
       localStorage.setItem('token', token)
       localStorage.setItem('user', JSON.stringify(newUser))
-      
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
       setUser(newUser)
-      
+
       return { success: true, user: newUser }
     } catch (error) {
       return { 
@@ -72,6 +77,34 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  // Request OTP (for login/signup)
+  const requestOtp = async (email, role) => {
+    try {
+      const response = await axios.post('/api/auth/request-otp', { email, role }, { withCredentials: true })
+      return { success: true, message: response.data.message }
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || 'Failed to send OTP' }
+    }
+  }
+
+  // Verify OTP
+  const verifyOtp = async (email, otp) => {
+    try {
+      const response = await axios.post('/api/auth/verify-otp', { email, otp }, { withCredentials: true })
+      const { token, user: userData } = response.data
+
+      localStorage.setItem('token', token)
+      localStorage.setItem('user', JSON.stringify(userData))
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      setUser(userData)
+
+      return { success: true, user: userData }
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || 'Invalid OTP' }
+    }
+  }
+
+  // Logout
   const logout = () => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
@@ -83,6 +116,8 @@ export const AuthProvider = ({ children }) => {
     user,
     login,
     register,
+    requestOtp,
+    verifyOtp,
     logout,
     loading
   }

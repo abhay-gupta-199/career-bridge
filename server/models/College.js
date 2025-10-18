@@ -35,6 +35,10 @@ const collegeSchema = new mongoose.Schema({
   establishedYear: {
     type: Number
   },
+  twoFactorEnabled: {
+    type: Boolean,
+    default: false
+  },
   totalStudents: {
     type: Number,
     default: 0

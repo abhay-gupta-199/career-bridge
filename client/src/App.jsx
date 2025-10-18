@@ -8,6 +8,7 @@ import About from './pages/About'
 import Jobs from './pages/Jobs'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
+import VerifyOtp from './pages/VerifyOtp'
 
 // 🎓 Dashboards
 import CollegeDashboard from './pages/college/CollegeDashboard'
@@ -41,6 +42,7 @@ function App() {
             <Route path="/jobs" element={<Jobs />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/verify-otp" element={<VerifyOtp />} />
 
             {/* ---------- 🎓 Student Dashboard ---------- */}
             <Route
