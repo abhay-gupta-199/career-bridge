@@ -98,7 +98,7 @@ export default function OwnerDashboard() {
 
         <div className="flex-1 p-6 space-y-8">
           <header>
-            <h1 className="text-3xl font-bold text-gray-900">Owner Dashboard</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
             <p className="text-gray-600">AI-powered insights and performance overview</p>
           </header>
 
