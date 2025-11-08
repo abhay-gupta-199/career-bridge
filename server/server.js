@@ -44,10 +44,7 @@ app.use(session({
 // ✅ Connect to MongoDB Atlas
 const MONGODB_URI = process.env.MONGODB_URI;
 
-mongoose.connect(MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
+mongoose.connect(MONGODB_URI)
   .then(() => console.log('✅ Connected to MongoDB Atlas successfully!'))
   .catch((error) => {
     console.error('❌ MongoDB connection error:', error.message);

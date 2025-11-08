@@ -1,0 +1,11 @@
+pandas
+requests
+python-docx
+PyPDF2
+langchain
+langchain-core
+langchain-community
+ollama
+fastapi
+uvicorn
+python-dotenv

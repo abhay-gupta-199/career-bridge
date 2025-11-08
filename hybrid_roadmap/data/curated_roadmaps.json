@@ -1,0 +1,36 @@
+{
+  "Python": {
+    "phases": [
+      {
+        "title": "Phase 1: Basics",
+        "topics": ["Syntax", "Data Types", "Loops", "Functions"],
+        "duration_weeks": 2,
+        "resources": [
+          "https://www.w3schools.com/python/",
+          "https://docs.python.org/3/tutorial/"
+        ],
+        "project": "CLI To-Do App"
+      },
+      {
+        "title": "Phase 2: Data Handling",
+        "topics": ["Virtualenv", "Pandas", "File I/O"],
+        "duration_weeks": 2,
+        "resources": [
+          "https://pandas.pydata.org/docs/getting_started/"
+        ],
+        "project": "CSV Data Cleaner"
+      }
+    ]
+  },
+  "SQL": {
+    "phases": [
+      {
+        "title": "Phase 1: Core Queries",
+        "topics": ["SELECT", "WHERE", "ORDER BY", "GROUP BY"],
+        "duration_weeks": 2,
+        "resources": ["https://www.w3schools.com/sql/"],
+        "project": "Sales Query Pack"
+      }
+    ]
+  }
+}
