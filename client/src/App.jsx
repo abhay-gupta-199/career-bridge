@@ -6,7 +6,7 @@ import { ThemeProvider } from './contexts/ThemeContext'
 import LandingPage from './pages/LandingPage'
 import About from './pages/About'
 import Jobs from './pages/Jobs'
-import Login from './pages/Login'
+// Removed Login import
 import Signup from './pages/Signup'
 import VerifyOtp from './pages/VerifyOtp'
 
@@ -40,8 +40,10 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/about" element={<About />} />
             <Route path="/jobs" element={<Jobs />} />
-            <Route path="/login" element={<Login />} />
+            
+            {/* Unified Signup/Login component */}
             <Route path="/signup" element={<Signup />} />
+            <Route path="/login" element={<Signup />} /> {/* auto toggle to login inside Signup */}
             <Route path="/verify-otp" element={<VerifyOtp />} />
 
             {/* ---------- 🎓 Student Dashboard ---------- */}
@@ -54,7 +56,6 @@ function App() {
               }
             />
             
-            {/* ---------- 🎓 Student Profile ---------- */}
             <Route
               path="/student/profile"
               element={
