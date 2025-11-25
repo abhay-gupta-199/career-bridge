@@ -1,11 +1,24 @@
-pandas
-requests
+# Core ML + Vectorizers
+scikit-learn
+sentence-transformers
+
+# NLP and Parsing
 python-docx
 PyPDF2
+pandas
+requests
+numpy
+
+# LangChain + Ollama (for roadmap AI)
 langchain
 langchain-core
 langchain-community
+langchain-ollama
 ollama
+
+# FastAPI Backend (your team already added these)
 fastapi
 uvicorn
+
+# Environment Variables
 python-dotenv

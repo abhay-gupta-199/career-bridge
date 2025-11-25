@@ -1,55 +1,10 @@
-# import json
-# from modules.parsing.resume_parser import parse_resume
-# from modules.parsing.jd_parser import parse_jd
-# from modules.roadmap.roadmap_builder import build_roadmap_for_skills
-
-# def ats_skill_pipeline(resume_path: str, jd_text: str, skills_csv_path: str) -> dict:
-#     resume_skills = parse_resume('Bhoomika_agrawal.resume.pdf', skills_csv_path)
-#     jd_skills_with_weights = parse_jd(jd_text, skills_csv_path)
-
-#     jd_skills = list(jd_skills_with_weights.keys())
-#     matched = [s for s in jd_skills if s in resume_skills]
-#     missing = [s for s in jd_skills if s not in resume_skills]
-
-#     total_weight = sum(jd_skills_with_weights.values()) or 1
-#     matched_weight = sum(jd_skills_with_weights[s] for s in matched)
-#     ats_score = round((matched_weight / total_weight) * 100, 2)
-
-#     roadmap = build_roadmap_for_skills(missing)
-
-#     return {
-#         "resume_skills": resume_skills,
-#         "jd_skills": jd_skills_with_weights,
-#         "matched_skills": matched,
-#         "missing_skills": missing,
-#         "ats_score": ats_score,
-#         "roadmap": roadmap
-#     }
-
-# if __name__ == "__main__":
-#     jd_text = """
-#     We are hiring a Data Analyst.
-#     Must have: Python, SQL, Excel.
-#     Good to have: Tableau, Power BI, Git.
-#     Optional: Docker
-#     """
-
-#     # put your actual resume file path here
-#     result = ats_skill_pipeline(
-#         resume_path="Bhoomika_agrawal.resume.pdf",
-#         jd_text=jd_text,
-#         skills_csv_path="data/skills.csv"
-#     )
-#     print(json.dumps(result, indent=4))
-
-
-
-
 import os
 import json
 from modules.parsing.resume_parser import parse_resume
 from modules.parsing.jd_parser import parse_jd
 from modules.roadmap.roadmap_builder import build_roadmap_for_skills
+from modules.recommender.job_semantic import recommend_jobs_semantic
+
 
 
 def ats_skill_pipeline(resume_path: str, jd_text: str, skills_csv_path: str) -> dict:
@@ -78,12 +33,16 @@ def ats_skill_pipeline(resume_path: str, jd_text: str, skills_csv_path: str) -> 
     # 🧩 Generate roadmap for missing skills
     roadmap = build_roadmap_for_skills(missing)
 
+    # Job recommendations
+    jobs = recommend_jobs_semantic(matched)
+
     return {
         "resume_skills": resume_skills,
         "jd_skills": jd_skills_with_weights,
         "matched_skills": matched,
         "missing_skills": missing,
         "ats_score": ats_score,
+        "jobs_recommendations": jobs,
         "roadmap": roadmap
     }
 

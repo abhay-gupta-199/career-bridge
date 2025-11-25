@@ -1,0 +1,102 @@
+[
+  {
+    "id": 1,
+    "title": "Python Developer",
+    "description": "Looking for a Python developer experienced with Django, REST APIs, SQL, and Git."
+  },
+  {
+    "id": 2,
+    "title": "Frontend Developer",
+    "description": "Seeking a frontend engineer skilled in React, JavaScript, HTML, CSS, Redux, and Git."
+  },
+  {
+    "id": 3,
+    "title": "Machine Learning Intern",
+    "description": "Hands-on experience with Python, Pandas, Scikit-learn, Jupyter, and basic ML algorithms required."
+  },
+  {
+    "id": 4,
+    "title": "Data Analyst",
+    "description": "Looking for a Data Analyst skilled in SQL, Excel, Power BI, Python, and dashboard creation."
+  },
+  {
+    "id": 5,
+    "title": "Backend Engineer",
+    "description": "Require expertise in Node.js, Express, MongoDB, REST APIs, and database schema design."
+  },
+  {
+    "id": 6,
+    "title": "Full Stack Developer",
+    "description": "Looking for MERN stack developer with experience in React, Node.js, MongoDB, Express and deployment."
+  },
+  {
+    "id": 7,
+    "title": "DevOps Engineer",
+    "description": "Experience with Docker, Kubernetes, CI/CD pipelines, Linux, AWS, Bash scripting preferred."
+  },
+  {
+    "id": 8,
+    "title": "Cloud Engineer",
+    "description": "Hands-on experience with AWS services, EC2, S3, Lambda, VPC, CloudWatch and Terraform."
+  },
+  {
+    "id": 9,
+    "title": "Software Engineer Intern",
+    "description": "Basic knowledge of OOP, Data Structures, Algorithms, Git and problem solving expected."
+  },
+  {
+    "id": 10,
+    "title": "Cybersecurity Analyst",
+    "description": "Knowledge of network security, vulnerability scanning, Linux, SIEM tools and Python required."
+  },
+  {
+    "id": 11,
+    "title": "Android App Developer",
+    "description": "Experience with Kotlin, Android Studio, Firebase, REST APIs and UI/UX understanding."
+  },
+  {
+    "id": 12,
+    "title": "iOS Developer",
+    "description": "Experience with Swift, Xcode, UIKit, REST APIs and app deployment on App Store."
+  },
+  {
+    "id": 13,
+    "title": "Quality Assurance Engineer",
+    "description": "Skilled in manual testing, automation (Selenium), test cases, bug tracking tools, and SQL."
+  },
+  {
+    "id": 14,
+    "title": "UI/UX Designer",
+    "description": "Experience with Figma, Adobe XD, wireframing, prototyping, and user research."
+  },
+  {
+    "id": 15,
+    "title": "Blockchain Developer",
+    "description": "Smart contract development using Solidity, Web3.js, Ethereum, and blockchain fundamentals."
+  },
+  {
+    "id": 16,
+    "title": "Game Developer",
+    "description": "Experience with Unity, C#, game physics, animations, and 2D/3D game mechanics."
+  },
+  {
+    "id": 17,
+    "title": "Database Administrator",
+    "description": "Strong knowledge of MySQL, PostgreSQL, backup & recovery, indexing, and performance tuning."
+  },
+  {
+    "id": 18,
+    "title": "AI Research Intern",
+    "description": "Knowledge of deep learning, PyTorch/TensorFlow, NLP, neural networks and Python required."
+  },
+  {
+    "id": 19,
+    "title": "Big Data Engineer",
+    "description": "Experience with Hadoop, Spark, Kafka, Python, ETL pipelines, and distributed computing."
+  },
+  {
+    "id": 20,
+    "title": "Technical Support Engineer",
+    "description": "Good understanding of Windows/Linux systems, troubleshooting, networking basics and communication skills."
+  }
+]
