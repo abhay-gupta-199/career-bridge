@@ -20,6 +20,14 @@ const jobSchema = new mongoose.Schema({
     type: String,
     trim: true
   }],
+  parsedSkills: [{
+    type: String,
+    trim: true
+  }],
+  requirements: {
+    type: String,
+    trim: true
+  },
   location: {
     type: String,
     required: true,

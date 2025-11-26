@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import axios from 'axios'
+import API from '../../api/axios'
 import Navbar from '../../components/Navbar'
 import OwnerSidebar from '../../components/OwnerSidebar'
-import { Search } from 'lucide-react'
+import { Search, Plus, X } from 'lucide-react'
 
 export default function OwnerOpportunities() {
   const [jobs, setJobs] = useState([])
@@ -10,6 +10,20 @@ export default function OwnerOpportunities() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('all')
   const [stats, setStats] = useState(null)
+  const [showCreateForm, setShowCreateForm] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [formData, setFormData] = useState({
+    title: '',
+    company: '',
+    description: '',
+    skillsRequired: '',
+    location: '',
+    salaryMin: '',
+    salaryMax: '',
+    experienceMin: '0',
+    experienceMax: '',
+    jobType: 'Full-time'
+  })
 
   useEffect(() => {
     fetchJobs()
@@ -17,7 +31,7 @@ export default function OwnerOpportunities() {
 
   const fetchJobs = async () => {
     try {
-      const res = await axios.get('/api/owner/jobs')
+      const res = await API.get('/owner/jobs')
       setJobs(res.data)
       setFiltered(res.data)
       calculateStats(res.data)
@@ -66,19 +80,19 @@ export default function OwnerOpportunities() {
   }
 
   const handleApprove = async (id) => {
-    if (!window.confirm('Approve or activate this opportunity?')) return
+    if (!window.confirm('Activate this opportunity?')) return
     try {
-      await axios.post(`/api/owner/jobs/${id}/approve`)
+      await API.put(`/owner/jobs/${id}`, { isActive: true })
       fetchJobs()
     } catch (err) {
-      alert('Error approving job')
+      alert('Error activating job')
     }
   }
 
   const handleDeactivate = async (id) => {
     if (!window.confirm('Deactivate this job?')) return
     try {
-      await axios.post(`/api/owner/jobs/${id}/deactivate`)
+      await API.put(`/owner/jobs/${id}`, { isActive: false })
       fetchJobs()
     } catch (err) {
       alert('Error deactivating job')
@@ -88,11 +102,64 @@ export default function OwnerOpportunities() {
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this opportunity permanently?')) return
     try {
-      await axios.delete(`/api/owner/jobs/${id}`)
+      await API.delete(`/owner/jobs/${id}`)
       fetchJobs()
     } catch (err) {
       alert('Error deleting job')
     }
+  }
+
+  const handleCreateJob = async (e) => {
+    e.preventDefault()
+    setCreating(true)
+    
+    try {
+      const jobData = {
+        title: formData.title,
+        company: formData.company,
+        description: formData.description,
+        skillsRequired: formData.skillsRequired,
+        location: formData.location,
+        salary: {
+          min: parseInt(formData.salaryMin) || 0,
+          max: parseInt(formData.salaryMax) || 0,
+          currency: 'INR'
+        },
+        experience: {
+          min: parseInt(formData.experienceMin) || 0,
+          max: parseInt(formData.experienceMax) || 0
+        },
+        jobType: formData.jobType
+      }
+
+      const res = await API.post('/owner/jobs', jobData)
+      alert(`Job created successfully! ${res.data.parsedSkillsCount} skills parsed. ${res.data.studentsNotified} students notified.`)
+      
+      // Reset form
+      setFormData({
+        title: '',
+        company: '',
+        description: '',
+        skillsRequired: '',
+        location: '',
+        salaryMin: '',
+        salaryMax: '',
+        experienceMin: '0',
+        experienceMax: '',
+        jobType: 'Full-time'
+      })
+      setShowCreateForm(false)
+      fetchJobs()
+    } catch (err) {
+      alert('Error creating job: ' + (err.response?.data?.message || err.message))
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
   }
 
   return (
@@ -104,12 +171,172 @@ export default function OwnerOpportunities() {
 
         <div className="flex-1 p-6 space-y-6">
           {/* Header */}
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Opportunity Management</h1>
-            <p className="text-gray-600">
-              Approve, deactivate, or manage posted opportunities
-            </p>
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Opportunity Management</h1>
+              <p className="text-gray-600">
+                Create, approve, deactivate, or manage posted opportunities
+              </p>
+            </div>
+            <button
+              onClick={() => setShowCreateForm(!showCreateForm)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            >
+              <Plus className="w-5 h-5" />
+              {showCreateForm ? 'Cancel' : 'Create New Job'}
+            </button>
           </div>
+
+          {/* Create Job Form */}
+          {showCreateForm && (
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Create New Job Opportunity</h2>
+              <p className="text-sm text-gray-600 mb-4">
+                Fill in the job details. The system will automatically parse the job description to extract skills and match with students.
+              </p>
+              
+              <form onSubmit={handleCreateJob} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Job Title *</label>
+                    <input
+                      type="text"
+                      name="title"
+                      value={formData.title}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Company *</label>
+                    <input
+                      type="text"
+                      name="company"
+                      value={formData.company}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Location *</label>
+                    <input
+                      type="text"
+                      name="location"
+                      value={formData.location}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Job Type *</label>
+                    <select
+                      name="jobType"
+                      value={formData.jobType}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="Full-time">Full-time</option>
+                      <option value="Part-time">Part-time</option>
+                      <option value="Contract">Contract</option>
+                      <option value="Internship">Internship</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Salary Min (₹)</label>
+                    <input
+                      type="number"
+                      name="salaryMin"
+                      value={formData.salaryMin}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Salary Max (₹)</label>
+                    <input
+                      type="number"
+                      name="salaryMax"
+                      value={formData.salaryMax}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Experience Min (years)</label>
+                    <input
+                      type="number"
+                      name="experienceMin"
+                      value={formData.experienceMin}
+                      onChange={handleInputChange}
+                      min="0"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Experience Max (years)</label>
+                    <input
+                      type="number"
+                      name="experienceMax"
+                      value={formData.experienceMax}
+                      onChange={handleInputChange}
+                      min="0"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Job Description (JD) * - Skills will be automatically extracted
+                  </label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    required
+                    rows="6"
+                    placeholder="Enter the complete job description. The system will automatically parse skills from this text."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Additional Skills (comma-separated, optional)
+                  </label>
+                  <input
+                    type="text"
+                    name="skillsRequired"
+                    value={formData.skillsRequired}
+                    onChange={handleInputChange}
+                    placeholder="e.g., JavaScript, Python, React"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateForm(false)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={creating}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+                  >
+                    {creating ? 'Creating...' : 'Create Job & Match Students'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
 
           {/* === Stats Overview === */}
           {stats && (
@@ -213,11 +440,36 @@ export default function OwnerOpportunities() {
                     )}
                   </div>
 
+                  {job.parsedSkills?.length > 0 && (
+                    <div className="mt-3">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                        Parsed JD Skills
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {job.parsedSkills.slice(0, 6).map((skill, idx) => (
+                          <span
+                            key={idx}
+                            className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                        {job.parsedSkills.length > 6 && (
+                          <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                            +{job.parsedSkills.length - 6}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="mt-3 text-xs text-gray-500">
                     <p>
                       Salary: ₹{job.salary?.min} - ₹{job.salary?.max}
                     </p>
-                    <p>Experience: {job.experience?.min} - {job.experience?.max} yrs</p>
+                    <p>
+                      Experience: {job.experience?.min} - {job.experience?.max} yrs
+                    </p>
                     <p>
                       Posted on: {new Date(job.createdAt).toLocaleDateString()}
                     </p>

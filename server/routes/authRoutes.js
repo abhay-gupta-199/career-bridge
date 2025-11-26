@@ -1,4 +1,9 @@
 const express = require('express');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const axios = require('axios');
+const FormData = require('form-data');
 const jwt = require('jsonwebtoken');
 const Student = require('../models/Student');
 const College = require('../models/College');
@@ -7,6 +12,35 @@ const { sendEmail, generateOTP } = require('../utils/sendEmail');
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+
+// Configure multer for resume uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = path.join(__dirname, '../../hybrid_roadmap/uploads');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'resume-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['.pdf', '.docx'];
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (allowedTypes.includes(ext)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF and DOCX files are allowed'));
+    }
+  }
+});
 
 // Helper: generate JWT token
 const generateToken = (userId, role) => {
@@ -17,13 +51,56 @@ const generateToken = (userId, role) => {
    Password-based Registration
 ========================== */
 
-// Student Registration
-router.post('/register/student', async (req, res) => {
+// Student Registration with Resume Upload
+router.post('/register/student', upload.single('resume'), async (req, res) => {
   try {
-    const { name, email, password, skills, resume, college, graduationYear } = req.body;
+    const { name, email, password, skills, college, graduationYear } = req.body;
+    const resumeFile = req.file;
 
     const existingStudent = await Student.findOne({ email });
-    if (existingStudent) return res.status(400).json({ message: 'Student already exists with this email' });
+    if (existingStudent) {
+      // Clean up uploaded file if student exists
+      if (resumeFile && fs.existsSync(resumeFile.path)) {
+        fs.unlinkSync(resumeFile.path);
+      }
+      return res.status(400).json({ message: 'Student already exists with this email' });
+    }
+
+    // Parse resume if file uploaded
+    let parsedSkills = [];
+    let resumePath = '';
+    
+    if (resumeFile) {
+      resumePath = `uploads/${resumeFile.filename}`;
+      
+      try {
+        const ML_API_URL = process.env.ML_API_URL || 'http://localhost:5002';
+        const formData = new FormData();
+        formData.append('file', fs.createReadStream(resumeFile.path), {
+          filename: resumeFile.filename,
+          contentType: resumeFile.mimetype
+        });
+
+        const mlResponse = await axios.post(`${ML_API_URL}/parse-resume`, formData, {
+          headers: {
+            ...formData.getHeaders()
+          },
+          maxContentLength: Infinity,
+          maxBodyLength: Infinity
+        });
+
+        if (mlResponse.data.status === 'success' && mlResponse.data.resume_skills) {
+          parsedSkills = mlResponse.data.resume_skills;
+        }
+      } catch (mlError) {
+        console.error('ML API Error (resume parsing):', mlError.message);
+        // Continue even if ML parsing fails
+      }
+    }
+
+    // Combine manual skills and parsed skills
+    const manualSkills = skills ? skills.split(',').map(s => s.trim()).filter(s => s) : [];
+    const allSkills = [...new Set([...manualSkills, ...parsedSkills])]; // Remove duplicates
 
     // Store pending registration in session and send OTP
     req.session.pendingRegistration = {
@@ -32,8 +109,8 @@ router.post('/register/student', async (req, res) => {
         name,
         email,
         password,
-        skills: skills || '',
-        resume: resume || '',
+        skills: allSkills,
+        resume: resumePath,
         college: college || '',
         graduationYear: graduationYear || ''
       }
@@ -52,7 +129,11 @@ router.post('/register/student', async (req, res) => {
     return res.json({ requiresOtp: true, message: 'OTP sent to your email' });
   } catch (error) {
     console.error('Student registration error:', error);
-    res.status(500).json({ message: 'Server error during registration' });
+    // Clean up uploaded file on error
+    if (req.file && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+    res.status(500).json({ message: 'Server error during registration: ' + error.message });
   }
 });
 
@@ -219,10 +300,10 @@ router.post('/verify-otp', async (req, res) => {
             name: data.name,
             email: data.email,
             password: data.password,
-            skills: data.skills ? data.skills.split(',').map(s => s.trim()) : [],
-            resume: data.resume,
-            college: data.college,
-            graduationYear: data.graduationYear
+            skills: Array.isArray(data.skills) ? data.skills : (data.skills ? data.skills.split(',').map(s => s.trim()) : []),
+            resume: data.resume || '',
+            college: data.college || '',
+            graduationYear: data.graduationYear || ''
           });
           await createdUser.save();
           break;

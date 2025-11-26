@@ -1,11 +1,285 @@
 skill,category
-Python,Technical
-SQL,Technical
-Excel,Tool
-JavaScript,Technical
+Python,Programming Language
+Java,Programming Language
+C,Programming Language
+CSS,Language
+HTML,Language
+C++,Programming Language
+C#,Programming Language
+JavaScript,Programming Language
+TypeScript,Programming Language
+Go,Programming Language
+PHP,Programming Language
+Ruby,Programming Language
+Kotlin,Programming Language
+Swift,Programming Language
+R,Programming Language
+Scala,Programming Language
+Rust,Programming Language
+Dart,Programming Language
+MATLAB,Programming Language
+Perl,Programming Language
+Haskell,Programming Language
+SQL,Database
+OOPS,JAVA 
+NoSQL,Database
+MySQL,Database
+PostgreSQL,Database
+MongoDB,Database
+SQLite,Database
+Oracle,Database
+Redis,Database
+Cassandra,Database
+Firebase,Database
+DynamoDB,Database
+Neo4j,Database
+Express,Framework
+Node.js,Framework
+React,Framework
+Angular,Framework
+Vue.js,Framework
+Svelte,Framework
+Next.js,Framework
+Nuxt.js,Framework
+Django,Framework
+Flask,Framework
+FastAPI,Framework
+Spring Boot,Framework
+Laravel,Framework
+Ruby on Rails,Framework
+ASP.NET,Framework
+TensorFlow,Machine Learning
+PyTorch,Machine Learning
+Keras,Machine Learning
+Scikit-learn,Machine Learning
+Pandas,Data Science
+NumPy,Data Science
+Matplotlib,Data Science
+Seaborn,Data Science
+Plotly,Data Science
+Jupyter,Tool
+Google Colab,Tool
+Anaconda,Tool
 Power BI,Tool
 Tableau,Tool
-Git,Tool
+Excel,Tool
+SPSS,Tool
+SAS,Tool
+Hadoop,Big Data
+Spark,Big Data
+Kafka,Big Data
+Hive,Big Data
+Pig,Big Data
+Airflow,Data Engineering
+dbt,Data Engineering
+ETL,Data Engineering
+Data Warehousing,Data Engineering
 Machine Learning,Technical
-React,Technical
-Docker,Tool
+Deep Learning,Technical
+NLP,Technical
+Computer Vision,Technical
+Data Mining,Technical
+Data Cleaning,Technical
+Data Preprocessing,Technical
+EDA,Technical
+Statistics,Technical
+Probability,Technical
+Neural Networks,Technical
+Regression,Technical
+Classification,Technical
+Clustering,Technical
+Reinforcement Learning,Technical
+GANs,Technical
+Transformers,Technical
+Time Series Analysis,Technical
+LLMs,Technical
+Git,Tool
+GitHub,Tool
+GitLab,Tool
+Bitbucket,Tool
+CI/CD,DevOps
+Docker,DevOps
+Kubernetes,DevOps
+Jenkins,DevOps
+Ansible,DevOps
+Terraform,DevOps
+Puppet,DevOps
+Linux,DevOps
+Bash,DevOps
+Zsh,DevOps
+Shell Scripting,DevOps
+AWS,Cloud
+Azure,Cloud
+Google Cloud,Cloud
+CloudFormation,Cloud
+EC2,Cloud
+S3,Cloud
+Lambda,Cloud
+CloudWatch,Cloud
+IAM,Cloud
+API Gateway,Cloud
+VPC,Cloud
+Cloud Security,Cloud
+REST APIs,Technical
+GraphQL,Technical
+SOAP,Technical
+JSON,Technical
+XML,Technical
+WebSockets,Technical
+Microservices,Technical
+System Design,Technical
+OOP,Technical
+Functional Programming,Technical
+Data Structures,Technical
+Algorithms,Technical
+Multithreading,Technical
+Design Patterns,Technical
+Event Driven Architecture,Technical
+Caching,Technical
+Load Balancing,Technical
+API Integration,Technical
+Android,Mobile
+Kotlin,Mobile
+XML Layouts,Mobile
+Android Studio,Mobile
+Firebase Authentication,Mobile
+Push Notifications,Mobile
+Swift,Mobile
+iOS Development,Mobile
+Xcode,Mobile
+Cocoa Touch,Mobile
+Unity,Game Development
+Unreal Engine,Game Development
+C#,Game Development
+Game Physics,Game Development
+3D Modeling,Game Development
+Animation,Game Development
+Blender,Tool
+Figma,Tool
+Adobe XD,Tool
+Adobe Photoshop,Tool
+Adobe Illustrator,Tool
+UI/UX,Design
+Wireframing,Design
+Prototyping,Design
+Usability Testing,Design
+Cybersecurity,Technical
+Network Security,Technical
+Penetration Testing,Technical
+Ethical Hacking,Technical
+Kali Linux,Technical
+Metasploit,Technical
+Burp Suite,Technical
+Wireshark,Technical
+Firewall Management,Technical
+Encryption,Technical
+Authentication,Technical
+OAuth,Technical
+JWT,Technical
+Risk Assessment,Technical
+Incident Response,Technical
+Operating Systems,Technical
+Virtualization,Technical
+VMware,Technical
+Hyper-V,Technical
+Agile,Methodology
+Scrum,Methodology
+Kanban,Methodology
+Project Management,Soft Skill
+Communication,Soft Skill
+Teamwork,Soft Skill
+Leadership,Soft Skill
+Creativity,Soft Skill
+Problem Solving,Soft Skill
+Critical Thinking,Soft Skill
+Time Management,Soft Skill
+Adaptability,Soft Skill
+Collaboration,Soft Skill
+Business Analysis,Business
+Requirement Gathering,Business
+Documentation,Business
+Testing,QA
+Manual Testing,QA
+Automation Testing,QA
+Selenium,QA
+Postman,Tool
+Swagger,Tool
+API Testing,QA
+Load Testing,QA
+Performance Testing,QA
+JMeter,QA
+Appium,QA
+Robot Framework,QA
+Code Optimization,Technical
+Debugging,Technical
+Profiling,Technical
+Logging,Technical
+Monitoring,Technical
+Prometheus,DevOps
+Grafana,DevOps
+ELK Stack,DevOps
+Kibana,DevOps
+Data Visualization,Technical
+Data Engineering,Technical
+Cloud Native,Technical
+Event Streaming,Technical
+Concurrency,Technical
+Version Control,Tool
+Serverless,Cloud
+MQTT,IoT
+IoT,Technical
+RPA,Automation
+UiPath,Automation
+Automation Anywhere,Automation
+Blue Prism,Automation
+Chatbots,AI
+LangChain,AI
+Vector Databases,AI
+LlamaIndex,AI
+Pinecone,AI
+FAISS,AI
+OpenCV,Computer Vision
+YOLO,Computer Vision
+Image Processing,Computer Vision
+OCR,Computer Vision
+Audio Processing,Technical
+Speech Recognition,Technical
+NLP Pipeline,Technical
+Prompt Engineering,AI
+FastAPI,Backend
+Flask,Backend
+Django Rest Framework,Backend
+JWT Authentication,Backend
+OAuth2,Backend
+Load Testing,Backend
+Debugging Tools,Backend
+SQL Optimization,Database
+Stored Procedures,Database
+Triggers,Database
+Indexes,Database
+Backup & Recovery,Database
+Snowflake,Data Warehouse
+Redshift,Data Warehouse
+BigQuery,Data Warehouse
+PowerShell,Scripting
+Automation Scripting,Technical
+Web Scraping,Technical
+BeautifulSoup,Technical
+Selenium Scraping,Technical
+API Development,Backend
+Event Logging,Backend
+Virtual Environments,Tool
+Poetry,Tool
+Pipenv,Tool
+Package Management,Tool
+Unit Testing,Testing
+PyTest,Testing
+Jest,Testing
+Mocha,Testing
+Cypress,Testing
+Playwright,Testing
+Clean Code,Technical
+Refactoring,Technical
+TDD,Testing
+BDD,Testing
+Data Pipelines,Data Engineering

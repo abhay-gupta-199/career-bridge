@@ -14,7 +14,7 @@ const collegeRoutes = require('./routes/collegeRoutes');
 const ownerRoutes = require('./routes/ownerRoutes');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5003;
 
 // Middleware
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost';

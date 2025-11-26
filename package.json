@@ -11,10 +11,22 @@
     "install-server": "cd server && npm install",
     "install-all": "npm run install-server && npm run install-client"
   },
-  "keywords": ["mern", "react", "nodejs", "mongodb", "career", "education"],
+  "keywords": [
+    "mern",
+    "react",
+    "nodejs",
+    "mongodb",
+    "career",
+    "education"
+  ],
   "author": "Career Bridge Team",
   "license": "MIT",
   "devDependencies": {
     "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "axios": "^1.13.2",
+    "form-data": "^4.0.5",
+    "multer": "^2.0.2"
   }
 }

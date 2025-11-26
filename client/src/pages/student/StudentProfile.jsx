@@ -15,6 +15,9 @@ const StudentProfile = () => {
     skills: '',
   })
   const [loading, setLoading] = useState(true)
+  const [uploading, setUploading] = useState(false)
+  const [uploadMessage, setUploadMessage] = useState('')
+  const [selectedFile, setSelectedFile] = useState(null)
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -50,6 +53,66 @@ const StudentProfile = () => {
       setEditing(false)
     } catch (err) {
       console.error('Error updating profile:', err)
+    }
+  }
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+      if (!allowedTypes.includes(file.type)) {
+        setUploadMessage('Please upload a PDF or DOCX file')
+        return
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        setUploadMessage('File size must be less than 10MB')
+        return
+      }
+      setSelectedFile(file)
+      setUploadMessage('')
+    }
+  }
+
+  const handleResumeUpload = async () => {
+    if (!selectedFile) {
+      setUploadMessage('Please select a file first')
+      return
+    }
+
+    setUploading(true)
+    setUploadMessage('')
+
+    try {
+      const formData = new FormData()
+      formData.append('resume', selectedFile)
+
+      const res = await API.post('/student/upload-resume', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+
+      // Refresh profile to get updated skills
+      const profileRes = await API.get('/student/profile')
+      setProfile(profileRes.data)
+      setFormData({
+        name: profileRes.data.name || '',
+        college: profileRes.data.college || '',
+        graduationYear: profileRes.data.graduationYear || '',
+        skills: (profileRes.data.skills || []).join(', '),
+      })
+
+      setUploadMessage(`Success! ${res.data.skills?.length || 0} skills extracted from your resume.`)
+      setSelectedFile(null)
+      
+      // Reset file input
+      const fileInput = document.getElementById('resume-upload')
+      if (fileInput) fileInput.value = ''
+    } catch (err) {
+      console.error('Error uploading resume:', err)
+      setUploadMessage(err.response?.data?.message || 'Error uploading resume. Please try again.')
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -153,6 +216,62 @@ const StudentProfile = () => {
             )}
           </div>
 
+          {/* Resume Upload */}
+          <div className="bg-white shadow-lg rounded-xl p-6 mb-6 animate-fadeIn">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Resume Upload</h2>
+            <p className="text-gray-600 text-sm mb-4">
+              Upload your resume (PDF or DOCX) to automatically extract and save your skills.
+            </p>
+            
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2 px-4 py-2 bg-purple-100 text-purple-700 rounded-lg cursor-pointer hover:bg-purple-200 transition">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  Choose File
+                  <input
+                    id="resume-upload"
+                    type="file"
+                    accept=".pdf,.docx"
+                    onChange={handleFileChange}
+                    className="hidden"
+                    disabled={uploading}
+                  />
+                </label>
+                {selectedFile && (
+                  <span className="text-sm text-gray-700">
+                    Selected: {selectedFile.name}
+                  </span>
+                )}
+              </div>
+
+              {uploadMessage && (
+                <div className={`p-3 rounded-lg text-sm ${
+                  uploadMessage.includes('Success') 
+                    ? 'bg-green-100 text-green-700' 
+                    : 'bg-red-100 text-red-700'
+                }`}>
+                  {uploadMessage}
+                </div>
+              )}
+
+              <button
+                onClick={handleResumeUpload}
+                disabled={!selectedFile || uploading}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
+              >
+                {uploading ? 'Uploading and Parsing...' : 'Upload & Extract Skills'}
+              </button>
+
+              {profile?.resume && (
+                <p className="text-sm text-gray-600">
+                  Current resume: {profile.resume.split('/').pop()}
+                </p>
+              )}
+            </div>
+          </div>
+
           {/* Skills */}
           <div className="bg-white shadow-lg rounded-xl p-6 animate-fadeIn">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Skills</h2>
@@ -167,14 +286,18 @@ const StudentProfile = () => {
               />
             ) : (
               <div className="flex flex-wrap gap-3">
-                {profile?.skills?.map((skill, idx) => (
-                  <span
-                    key={idx}
-                    className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium"
-                  >
-                    {skill}
-                  </span>
-                ))}
+                {profile?.skills && profile.skills.length > 0 ? (
+                  profile.skills.map((skill, idx) => (
+                    <span
+                      key={idx}
+                      className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium"
+                    >
+                      {skill}
+                    </span>
+                  ))
+                ) : (
+                  <p className="text-gray-500 text-sm">No skills added yet. Upload a resume to extract skills automatically.</p>
+                )}
               </div>
             )}
           </div>

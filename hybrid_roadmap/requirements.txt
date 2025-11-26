@@ -20,5 +20,9 @@ ollama
 fastapi
 uvicorn
 
+# Flask API
+flask
+flask-cors
+
 # Environment Variables
 python-dotenv

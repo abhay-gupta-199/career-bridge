@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import axios from 'axios'
+import API from '../../api/axios'
 import Navbar from '../../components/Navbar'
 import OwnerSidebar from '../../components/OwnerSidebar'
 import { Search } from 'lucide-react'
@@ -8,19 +8,38 @@ export default function OwnerUsers() {
   const [students, setStudents] = useState([])
   const [filteredStudents, setFilteredStudents] = useState([])
   const [search, setSearch] = useState('')
+  const [colleges, setColleges] = useState([])
+  const [filteredColleges, setFilteredColleges] = useState([])
+  const [collegeSearch, setCollegeSearch] = useState('')
   const [filter, setFilter] = useState('all')
   const [stats, setStats] = useState(null)
+  const [collegeStats, setCollegeStats] = useState(null)
 
   useEffect(() => {
     fetchStudents()
+    fetchColleges()
   }, [])
 
   const fetchStudents = async () => {
     try {
-      const res = await axios.get('/api/owner/students')
+      const res = await API.get('/owner/students')
       setStudents(res.data)
       setFilteredStudents(res.data)
       calculateStats(res.data)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const fetchColleges = async () => {
+    try {
+      const res = await API.get('/owner/colleges')
+      setColleges(res.data)
+      setFilteredColleges(res.data)
+      setCollegeStats({
+        total: res.data.length,
+        active: res.data.filter((c) => !c.isBlocked).length
+      })
     } catch (err) {
       console.error(err)
     }
@@ -42,7 +61,7 @@ export default function OwnerUsers() {
   const handleBlock = async (id) => {
     if (!window.confirm('Block this user?')) return
     try {
-      await axios.post(`/api/owner/students/${id}/block`)
+      await API.post(`/owner/students/${id}/block`)
       fetchStudents()
     } catch (err) {
       alert('Error blocking user')
@@ -71,6 +90,22 @@ export default function OwnerUsers() {
     else if (filterType === 'unplaced') result = result.filter((s) => !s.isPlaced)
 
     setFilteredStudents(result)
+  }
+
+  const handleCollegeSearch = (e) => {
+    const value = e.target.value.toLowerCase()
+    setCollegeSearch(value)
+    if (!value) {
+      setFilteredColleges(colleges)
+      return
+    }
+    setFilteredColleges(
+      colleges.filter(
+        (c) =>
+          c.name.toLowerCase().includes(value) ||
+          c.email.toLowerCase().includes(value)
+      )
+    )
   }
 
   return (
@@ -208,6 +243,89 @@ export default function OwnerUsers() {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Colleges Section */}
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Colleges</h2>
+                <p className="text-gray-600 text-sm">Connected partner institutions</p>
+              </div>
+              <div className="relative w-full sm:w-1/3">
+                <Search className="absolute left-3 top-2.5 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  value={collegeSearch}
+                  onChange={handleCollegeSearch}
+                  placeholder="Search colleges"
+                  className="w-full pl-10 pr-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            {collegeStats && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="card">
+                  <p className="text-sm text-gray-600">Total Colleges</p>
+                  <h2 className="text-2xl font-bold text-blue-600">{collegeStats.total}</h2>
+                </div>
+                <div className="card">
+                  <p className="text-sm text-gray-600">Active Colleges</p>
+                  <h2 className="text-2xl font-bold text-green-600">{collegeStats.active}</h2>
+                </div>
+                <div className="card">
+                  <p className="text-sm text-gray-600">Inactive</p>
+                  <h2 className="text-2xl font-bold text-yellow-600">
+                    {collegeStats.total - collegeStats.active}
+                  </h2>
+                </div>
+              </div>
+            )}
+
+            <div className="card overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="p-3 text-left">Name</th>
+                    <th className="p-3 text-left">Email</th>
+                    <th className="p-3 text-left">Location</th>
+                    <th className="p-3 text-left">Website</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredColleges.length > 0 ? (
+                    filteredColleges.map((c) => (
+                      <tr key={c._id} className="border-b hover:bg-gray-50">
+                        <td className="p-3 font-medium text-gray-900">{c.name}</td>
+                        <td className="p-3 text-gray-700">{c.email}</td>
+                        <td className="p-3 text-gray-600">{c.location || 'N/A'}</td>
+                        <td className="p-3 text-blue-600">
+                          {c.website ? (
+                            <a
+                              href={c.website}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="hover:underline"
+                            >
+                              {c.website}
+                            </a>
+                          ) : (
+                            'N/A'
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="4" className="p-6 text-center text-gray-500">
+                        No colleges found
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>

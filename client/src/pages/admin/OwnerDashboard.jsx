@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import axios from 'axios'
+import API from '../../api/axios'
 import Navbar from '../../components/Navbar'
 import OwnerSidebar from '../../components/OwnerSidebar'
 import {
@@ -20,6 +20,7 @@ export default function OwnerDashboard() {
   const [stats, setStats] = useState(null)
   const [recentJobs, setRecentJobs] = useState([])
   const [recentStudents, setRecentStudents] = useState([])
+  const [recentColleges, setRecentColleges] = useState([])
   const [skillData, setSkillData] = useState([])
   const [userGrowth, setUserGrowth] = useState([])
 
@@ -34,7 +35,7 @@ export default function OwnerDashboard() {
 
   const fetchStats = async () => {
     try {
-      const { data } = await axios.get('/api/owner/dashboard')
+      const { data } = await API.get('/owner/dashboard')
       setStats(data)
     } catch (error) {
       console.error(error)
@@ -43,10 +44,14 @@ export default function OwnerDashboard() {
 
   const fetchRecentData = async () => {
     try {
-      const jobsRes = await axios.get('/api/owner/jobs?limit=5')
-      const studentsRes = await axios.get('/api/owner/students?limit=5')
+      const [jobsRes, studentsRes, collegesRes] = await Promise.all([
+        API.get('/owner/jobs?limit=5'),
+        API.get('/owner/students?limit=5'),
+        API.get('/owner/colleges?limit=5')
+      ])
       setRecentJobs(jobsRes.data)
       setRecentStudents(studentsRes.data)
+      setRecentColleges(collegesRes.data)
     } catch (error) {
       console.error(error)
     }
@@ -54,7 +59,7 @@ export default function OwnerDashboard() {
 
   const fetchSkillInsights = async () => {
     try {
-      const { data } = await axios.get('/api/owner/skill-insights')
+      const { data } = await API.get('/owner/skill-insights')
       setSkillData(data)
     } catch (error) {
       console.error('Error fetching skill insights:', error)
@@ -71,7 +76,7 @@ export default function OwnerDashboard() {
 
   const fetchUserGrowth = async () => {
     try {
-      const { data } = await axios.get('/api/owner/user-growth')
+      const { data } = await API.get('/owner/user-growth')
       setUserGrowth(data)
     } catch (error) {
       console.error('Error fetching user growth:', error)
@@ -125,7 +130,7 @@ export default function OwnerDashboard() {
           )}
 
           {/* === Charts === */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* User Growth Chart */}
             <div className="card">
               <h3 className="text-lg font-semibold mb-3">User Growth (Monthly)</h3>
@@ -191,6 +196,18 @@ export default function OwnerDashboard() {
                   <h4 className="font-medium text-gray-900">{s.name}</h4>
                   <p className="text-sm text-gray-600">{s.email}</p>
                   <p className="text-xs text-gray-500">{s.college || 'N/A'}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Recent Colleges */}
+            <div className="card">
+              <h3 className="text-lg font-semibold mb-3">Recent Colleges</h3>
+              {recentColleges.map((college) => (
+                <div key={college._id} className="border rounded-lg p-3 mb-2">
+                  <h4 className="font-medium text-gray-900">{college.name}</h4>
+                  <p className="text-sm text-gray-600">{college.email}</p>
+                  <p className="text-xs text-gray-500">{college.location || 'N/A'}</p>
                 </div>
               ))}
             </div>

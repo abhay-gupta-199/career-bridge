@@ -1,9 +1,44 @@
 const express = require('express')
+const multer = require('multer')
+const path = require('path')
+const fs = require('fs')
+const axios = require('axios')
+const FormData = require('form-data')
 const authMiddleware = require('../middleware/authMiddleware')
 const Student = require('../models/Student')
 const Job = require('../models/Job')
+const Notification = require('../models/Notification')
 
 const router = express.Router()
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = path.join(__dirname, '../../hybrid_roadmap/uploads')
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true })
+    }
+    cb(null, uploadDir)
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname))
+  }
+})
+
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['.pdf', '.docx']
+    const ext = path.extname(file.originalname).toLowerCase()
+    if (allowedTypes.includes(ext)) {
+      cb(null, true)
+    } else {
+      cb(new Error('Only PDF and DOCX files are allowed'))
+    }
+  }
+})
 
 // ========================
 // ✅ Get student profile
@@ -181,6 +216,140 @@ router.get('/dashboard', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Dashboard summary error:', error)
     res.status(500).json({ message: 'Server error' })
+  }
+})
+
+// ========================
+// ✅ Get Notifications
+// ========================
+router.get('/notifications', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'student') {
+      return res.status(403).json({ message: 'Access denied' })
+    }
+
+    const notifications = await Notification.find({ student: req.user._id })
+      .populate('job', 'title company location')
+      .sort({ createdAt: -1 })
+      .limit(50)
+
+    const unreadCount = await Notification.countDocuments({ 
+      student: req.user._id, 
+      isRead: false 
+    })
+
+    res.json({
+      notifications,
+      unreadCount
+    })
+  } catch (error) {
+    console.error('Get notifications error:', error)
+    res.status(500).json({ message: 'Server error' })
+  }
+})
+
+// ========================
+// ✅ Mark Notification as Read
+// ========================
+router.put('/notifications/:notificationId/read', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'student') {
+      return res.status(403).json({ message: 'Access denied' })
+    }
+
+    const notification = await Notification.findOne({
+      _id: req.params.notificationId,
+      student: req.user._id
+    })
+
+    if (!notification) {
+      return res.status(404).json({ message: 'Notification not found' })
+    }
+
+    notification.isRead = true
+    await notification.save()
+
+    res.json({ message: 'Notification marked as read' })
+  } catch (error) {
+    console.error('Mark notification read error:', error)
+    res.status(500).json({ message: 'Server error' })
+  }
+})
+
+// ========================
+// ✅ Upload Resume and Parse Skills
+// ========================
+router.post('/upload-resume', authMiddleware, upload.single('resume'), async (req, res) => {
+  try {
+    if (req.userRole !== 'student') {
+      return res.status(403).json({ message: 'Access denied' })
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' })
+    }
+
+    const ML_API_URL = process.env.ML_API_URL || 'http://localhost:5002'
+    const filePath = req.file.path
+    const fileName = req.file.filename
+
+    // Create FormData to send to ML API
+    const formData = new FormData()
+    formData.append('file', fs.createReadStream(filePath), {
+      filename: fileName,
+      contentType: req.file.mimetype
+    })
+
+    // Call ML API to parse resume
+    let parsedSkills = []
+    try {
+      const mlResponse = await axios.post(`${ML_API_URL}/parse-resume`, formData, {
+        headers: {
+          ...formData.getHeaders()
+        },
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity
+      })
+
+      if (mlResponse.data.status === 'success' && mlResponse.data.resume_skills) {
+        parsedSkills = mlResponse.data.resume_skills
+      }
+    } catch (mlError) {
+      console.error('ML API Error:', mlError.message)
+      // Continue even if ML API fails - we'll still save the resume
+    }
+
+    // Update student profile with resume and skills
+    const student = await Student.findById(req.user._id)
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' })
+    }
+
+    // Save resume path (relative to hybrid_roadmap/uploads)
+    student.resume = `uploads/${fileName}`
+    
+    // Merge new skills with existing ones (avoid duplicates)
+    const existingSkills = student.skills || []
+    const newSkills = parsedSkills.filter(skill => !existingSkills.includes(skill))
+    student.skills = [...existingSkills, ...newSkills]
+
+    await student.save()
+
+    res.json({
+      message: 'Resume uploaded and parsed successfully',
+      skills: parsedSkills,
+      totalSkills: student.skills,
+      resume: student.resume
+    })
+  } catch (error) {
+    console.error('Upload resume error:', error)
+    
+    // Clean up uploaded file if error occurred
+    if (req.file && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path)
+    }
+    
+    res.status(500).json({ message: 'Server error: ' + error.message })
   }
 })
 

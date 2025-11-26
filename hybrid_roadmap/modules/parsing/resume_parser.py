@@ -1,7 +1,7 @@
 import PyPDF2
 from docx import Document
 import pandas as pd
-from .skill_extractor import extract_skills
+from modules.parsing.skill_extractor import extract_skills
 
 def _extract_text_from_docx(path: str) -> str:
     doc = Document(path)
