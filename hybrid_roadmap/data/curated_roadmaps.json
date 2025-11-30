@@ -1,36 +1,72 @@
 {
   "Python": {
-    "phases": [
+    "main_course": "Python",
+    "duration_weeks": 6,
+    "subtopics": [
       {
-        "title": "Phase 1: Basics",
-        "topics": ["Syntax", "Data Types", "Loops", "Functions"],
-        "duration_weeks": 2,
-        "resources": [
-          "https://www.w3schools.com/python/",
-          "https://docs.python.org/3/tutorial/"
-        ],
+        "title": "Syntax & Basics",
+        "topics": ["Syntax", "Variables", "Input/Output", "Indentation"],
+        "project": "Basic Calculator App"
+      },
+      {
+        "title": "Python Data Types",
+        "topics": ["Strings", "Lists", "Tuples", "Dictionaries", "Sets"],
+        "project": "Student Record Manager"
+      },
+      {
+        "title": "Control Flow",
+        "topics": ["If-Else", "Loops", "Break/Continue"],
+        "project": "Number Guessing Game"
+      },
+      {
+        "title": "Functions",
+        "topics": ["Arguments", "Return Values", "Lambda Functions"],
         "project": "CLI To-Do App"
       },
       {
-        "title": "Phase 2: Data Handling",
-        "topics": ["Virtualenv", "Pandas", "File I/O"],
-        "duration_weeks": 2,
-        "resources": [
-          "https://pandas.pydata.org/docs/getting_started/"
-        ],
+        "title": "Data Handling",
+        "topics": ["File Handling", "CSV", "JSON"],
         "project": "CSV Data Cleaner"
-      }
-    ]
-  },
-  "SQL": {
-    "phases": [
+      },
       {
-        "title": "Phase 1: Core Queries",
-        "topics": ["SELECT", "WHERE", "ORDER BY", "GROUP BY"],
-        "duration_weeks": 2,
-        "resources": ["https://www.w3schools.com/sql/"],
-        "project": "Sales Query Pack"
+        "title": "Pandas Basics",
+        "topics": ["Series", "DataFrame", "Reading CSV"],
+        "project": "Mini Data Analysis Project"
       }
-    ]
+    ],
+    "final_projects": {
+      "suggested": [
+        "Build an Expense Tracker using Python",
+        "Create a Portfolio-ready Data Analysis App"
+      ]
+    }
+  },
+
+  "SQL": {
+    "main_course": "SQL",
+    "duration_weeks": 4,
+    "subtopics": [
+      {
+        "title": "Core Queries",
+        "topics": ["SELECT", "WHERE", "ORDER BY", "GROUP BY"],
+        "project": "Sales Query Pack"
+      },
+      {
+        "title": "Joins",
+        "topics": ["INNER JOIN", "LEFT JOIN", "RIGHT JOIN"],
+        "project": "Customer–Orders Dashboard Queries"
+      },
+      {
+        "title": "Subqueries",
+        "topics": ["Nested SELECT", "IN", "EXISTS"],
+        "project": "Employee Performance Queries"
+      }
+    ],
+    "final_projects": {
+      "suggested": [
+        "Design a Student Result Database",
+        "Create an E-commerce Analytics SQL Project"
+      ]
+    }
   }
 }

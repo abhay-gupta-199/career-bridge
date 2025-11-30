@@ -26,6 +26,8 @@ import OwnerSettings from './pages/admin/OwnerSettings'
 // Student Pages
 import StudentDashboard from './pages/student/StudentDashboard'
 import StudentProfile from './pages/student/StudentProfile'
+import StudentRoadmap from './pages/student/StudentRoadmap'
+
 
 // 🔐 Route Protection
 import ProtectedRoute from './components/ProtectedRoute'
@@ -55,6 +57,16 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            
+            <Route
+              path="/student/roadmaps"
+              element={
+                <ProtectedRoute role="student">
+                  <StudentRoadmap />
+                </ProtectedRoute>
+              }
+            />
+
             
             <Route
               path="/student/profile"
