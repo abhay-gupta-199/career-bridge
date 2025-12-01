@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { motion } from 'framer-motion'
+import axios from 'axios'
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 40 },
@@ -19,38 +20,12 @@ const staggerFade = {
 
 const Jobs = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [jobs, setJobs] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [selectedJob, setSelectedJob] = useState(null)
+  const [error, setError] = useState(null)
 
-  const jobs = [
-    {
-      id: 1,
-      title: "Frontend Developer",
-      company: "TechCorp Solutions",
-      location: "San Francisco, CA",
-      type: "Full-time",
-      salary: "$80k - $120k",
-      matchPercentage: 85,
-      description: "Passionate about building interactive UIs using React, TypeScript, and modern web technologies.",
-      requirements: ["React", "JavaScript", "TypeScript", "CSS", "HTML"],
-      category: "frontend",
-      postedDate: "2 days ago",
-      logo: "https://via.placeholder.com/60x60/3B82F6/FFFFFF?text=TC"
-    },
-    {
-      id: 2,
-      title: "Backend Developer",
-      company: "DataFlow Inc",
-      location: "New York, NY",
-      type: "Full-time",
-      salary: "$90k - $130k",
-      matchPercentage: 78,
-      description: "Build scalable APIs and microservices with Node.js, Python, and cloud databases.",
-      requirements: ["Node.js", "Python", "MongoDB", "PostgreSQL", "AWS"],
-      category: "backend",
-      postedDate: "1 day ago",
-      logo: "https://via.placeholder.com/60x60/10B981/FFFFFF?text=DF"
-    },
-    // ...add other jobs here
-  ];
+  // jobs are loaded from backend for current student (includes studentMatch info)
 
   const categories = [
     { id: 'all', name: 'All Jobs' },
@@ -74,6 +49,27 @@ const Jobs = () => {
     if (percentage >= 70) return 'bg-yellow-100 text-yellow-800';
     return 'bg-red-100 text-red-800';
   };
+
+  useEffect(() => {
+    let mounted = true
+    const fetchJobs = async () => {
+      setLoading(true)
+      try {
+        const res = await axios.get('/api/student/jobs')
+        if (!mounted) return
+        setJobs(res.data)
+        setError(null)
+      } catch (err) {
+        console.error('Error fetching jobs:', err.message)
+        setError('Failed to load jobs')
+      } finally {
+        if (mounted) setLoading(false)
+      }
+    }
+
+    fetchJobs()
+    return () => { mounted = false }
+  }, [])
 
   return (
     <div className="min-h-screen bg-white">
@@ -129,15 +125,22 @@ const Jobs = () => {
       {/* Jobs Grid */}
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredJobs.map((job, i) => (
+          {loading ? (
+            <div className="col-span-full text-center py-8">Loading jobs...</div>
+          ) : error ? (
+            <div className="col-span-full text-center text-red-500 py-8">{error}</div>
+          ) : filteredJobs.length === 0 ? (
+            <div className="col-span-full text-center py-8">No jobs found</div>
+          ) : filteredJobs.map((job, i) => (
             <motion.div
-              key={job.id}
+              key={job._id || job.id}
               variants={staggerFade}
               custom={i}
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
-              className="p-6 bg-white/20 backdrop-blur-md rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-200"
+              className="p-6 bg-white/20 backdrop-blur-md rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-200 cursor-pointer"
+              onClick={() => setSelectedJob(job)}
             >
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-3">
@@ -147,23 +150,70 @@ const Jobs = () => {
                     <p className="text-gray-700">{job.company}</p>
                   </div>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getMatchColor(job.matchPercentage)}`}>
-                  {job.matchPercentage}% match
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getMatchColor(job.studentMatch?.matchPercentage ?? 0)}`}>
+                  {job.studentMatch?.matchPercentage ?? 0}% match
                 </span>
               </div>
               <p className="text-gray-700 mb-3">{job.description}</p>
               <div className="flex flex-wrap gap-2 mb-4">
-                {job.requirements.map((r, idx) => (
+                {(job.requirements || job.skillsRequired || job.parsedSkills || []).slice(0,6).map((r, idx) => (
                   <span key={idx} className="px-2 py-1 bg-white/50 text-[#10002b] text-xs rounded-md">{r}</span>
                 ))}
+                {((job.requirements || job.skillsRequired || job.parsedSkills || []).length || 0) > 6 && (
+                  <span className="px-2 py-1 text-xs text-gray-600">+ more</span>
+                )}
               </div>
-              <button className="w-full bg-[#10002b] text-white py-2 rounded-lg hover:bg-[#240046] transition-colors duration-200">
-                Apply Now
-              </button>
+              <div className="flex gap-3">
+                <button className="flex-1 bg-[#10002b] text-white py-2 rounded-lg hover:bg-[#240046] transition-colors duration-200">
+                  Apply Now
+                </button>
+                <button onClick={(e) => { e.stopPropagation(); setSelectedJob(job) }} className="px-4 py-2 border rounded-lg text-sm">Details</button>
+              </div>
             </motion.div>
           ))}
         </div>
       </section>
+
+      {/* Job Details Modal */}
+      {selectedJob && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-2xl max-w-3xl w-full p-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <h2 className="text-2xl font-bold">{selectedJob.title}</h2>
+                <p className="text-sm text-gray-600">{selectedJob.company} • {selectedJob.location}</p>
+              </div>
+              <button aria-label="Close details" onClick={() => setSelectedJob(null)} className="text-gray-500 hover:text-gray-800">✕</button>
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h4 className="font-semibold">Description</h4>
+                <p className="text-gray-700 mt-2">{selectedJob.description}</p>
+              </div>
+              <div>
+                <h4 className="font-semibold">Required Skills</h4>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {(selectedJob.skillsRequired || selectedJob.parsedSkills || selectedJob.requirements || []).map((s, idx) => (
+                    <span key={idx} className="px-3 py-1 bg-gray-100 rounded-full text-sm">{s}</span>
+                  ))}
+                  {((selectedJob.skillsRequired || selectedJob.parsedSkills || selectedJob.requirements || []).length === 0) && (
+                    <div className="text-sm text-gray-500">No skills listed for this job</div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex items-center justify-between">
+              <div className="text-sm text-gray-700">Match: <span className="font-semibold">{selectedJob.studentMatch?.matchPercentage ?? 0}%</span></div>
+              <div className="flex gap-3">
+                <button className="bg-[#10002b] text-white px-4 py-2 rounded-lg">Apply Now</button>
+                <button onClick={() => setSelectedJob(null)} className="px-4 py-2 border rounded-lg">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

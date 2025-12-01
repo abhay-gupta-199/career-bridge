@@ -8,6 +8,7 @@ const authMiddleware = require('../middleware/authMiddleware')
 const Student = require('../models/Student')
 const Job = require('../models/Job')
 const Notification = require('../models/Notification')
+const { matchStudentWithJD, cleanSkillArray } = require('../utils/matchingEngine')
 
 const router = express.Router()
 
@@ -119,8 +120,59 @@ router.get('/jobs', authMiddleware, async (req, res) => {
       return res.status(403).json({ message: 'Access denied' })
     }
 
+    // Fetch student to compute per-job match percentage
+    const student = await Student.findById(req.user._id).select('skills name email')
+
     const jobs = await Job.find({ isActive: true }).populate('postedBy', 'name').sort({ createdAt: -1 })
-    res.json(jobs)
+
+    // Normalize student skills once
+    const studentSkills = student && Array.isArray(student.skills) ? cleanSkillArray(student.skills) : []
+
+    // Attach match info for the logged-in student for each job
+    const jobsWithMatch = []
+    for (const job of jobs) {
+      try {
+        // Prefer stored match if available on the job document
+        let matchInfo = { matchPercentage: 0, matched_skills: [], missing_skills: [], method: 'none' }
+
+        if (Array.isArray(job.matches) && job.matches.length > 0) {
+          const stored = job.matches.find(m => String(m.student) === String(student._id))
+          if (stored) {
+            matchInfo = {
+              matchPercentage: stored.matchPercentage || 0,
+              matched_skills: stored.matchedSkills || [],
+              missing_skills: stored.missingSkills || [],
+              method: stored.method || 'stored'
+            }
+          }
+        }
+
+        // If no stored match found, compute on-the-fly as fallback
+        if ((!matchInfo || matchInfo.matchPercentage === 0) && studentSkills.length > 0) {
+          const jobSkills = cleanSkillArray(job.skillsRequired || job.parsedSkills || [])
+          if (jobSkills.length > 0) {
+            const result = await matchStudentWithJD(studentSkills, jobSkills)
+            matchInfo = {
+              matchPercentage: result.match_percentage || 0,
+              matched_skills: result.matched_skills || [],
+              missing_skills: result.missing_skills || [],
+              method: result.method || 'simple'
+            }
+          }
+        }
+
+        const jobObj = job.toObject()
+        jobObj.studentMatch = matchInfo
+        jobsWithMatch.push(jobObj)
+      } catch (err) {
+        console.error('Error computing match for job', job._id, err.message)
+        const jobObj = job.toObject()
+        jobObj.studentMatch = { matchPercentage: 0, matched_skills: [], missing_skills: [], method: 'error' }
+        jobsWithMatch.push(jobObj)
+      }
+    }
+
+    res.json(jobsWithMatch)
   } catch (error) {
     console.error('Get jobs error:', error)
     res.status(500).json({ message: 'Server error' })
@@ -134,6 +186,15 @@ router.post('/jobs/:jobId/apply', authMiddleware, async (req, res) => {
   try {
     if (req.userRole !== 'student') {
       return res.status(403).json({ message: 'Access denied' })
+    }
+
+    // Check if student is blocked
+    const student = await Student.findById(req.user._id)
+    if (student?.isBlocked) {
+      return res.status(403).json({ 
+        message: 'Your account has been blocked. You cannot apply for jobs.',
+        reason: student.blockReason || 'No reason provided'
+      })
     }
 
     const job = await Job.findById(req.params.jobId)
@@ -194,7 +255,7 @@ router.get('/dashboard', authMiddleware, async (req, res) => {
   try {
     if (req.userRole !== 'student') return res.status(403).json({ message: 'Access denied' })
 
-    const student = await Student.findById(req.user._id).select('name skills')
+    const student = await Student.findById(req.user._id).select('name skills email college graduationYear')
     const jobs = await Job.find({ 'applications.student': req.user._id })
 
     const totalApplications = jobs.length
@@ -205,10 +266,18 @@ router.get('/dashboard', authMiddleware, async (req, res) => {
       job.applications.some(app => app.student.toString() === req.user._id.toString() && app.status === 'Rejected')
     ).length
 
+    // Calculate profile completion accurately
+    const profileFields = ['name', 'email', 'college', 'graduationYear', 'skills']
+    let filledFields = profileFields.reduce((count, field) => {
+      if (student[field] && (Array.isArray(student[field]) ? student[field].length > 0 : true)) count++
+      return count
+    }, 0)
+    const profileCompletion = Math.min(100, Math.floor((filledFields / profileFields.length) * 100))
+
     res.json({
       name: student.name,
       skills: student.skills,
-      profileCompletion: student.skills?.length ? 80 + student.skills.length * 2 : 70,
+      profileCompletion,
       totalApplications,
       shortlisted,
       rejected
