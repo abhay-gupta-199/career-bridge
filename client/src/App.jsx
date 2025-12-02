@@ -29,6 +29,8 @@ import StudentProfile from './pages/student/StudentProfile'
 import StudentJobs from './pages/student/Jobs'
 import StudentApplications from './pages/student/Applications'
 import StudentNotifications from './pages/StudentNotifications'
+=======
+
 
 // 🔐 Route Protection
 import ProtectedRoute from './components/ProtectedRoute'
@@ -58,6 +60,16 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            
+            <Route
+              path="/student/roadmaps"
+              element={
+                <ProtectedRoute role="student">
+                  <StudentRoadmap />
+                </ProtectedRoute>
+              }
+            />
+
             
             <Route
               path="/student/profile"

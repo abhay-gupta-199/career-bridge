@@ -4,6 +4,8 @@ from modules.parsing.jd_parser import parse_jd
 from modules.parsing.resume_parser import parse_resume
 from modules.recommender.jd_reume import  match_resume_jd_semantic
 from modules.recommender.job_semantic import recommend_jobs_semantic
+from routes.roadmap_routes import roadmap_bp
+
 import os
 
 app = Flask(__name__)
@@ -11,6 +13,9 @@ CORS(app)  # Enable CORS for all routes
 
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# REGISTER NEW ROUTE
+app.register_blueprint(roadmap_bp, url_prefix="/api")
 
 
 SKILLS_CSV = "data/skills.csv"

@@ -1,38 +1,40 @@
+
+
+
 import json
+from .llama_agent import generate_subtopics
 from .fallback_data import load_curated_data
-from .llama_agent import generate_roadmap_with_ai
 from .fetchers import fetch_youtube_links, fetch_github_projects
 
-def build_roadmap_for_skill(skill: str) -> dict:
-    curated = load_curated_data()
-    # 1) Curated if available
-    if skill in curated:
-        roadmap = curated[skill]
-    else:
-        # 2) AI generate if not curated
-        ai_raw = generate_roadmap_with_ai(skill)
-        try:
-            roadmap = json.loads(ai_raw)
-        except Exception:
-            # emergency fallback
-            roadmap = {
-                "phases": [
-                    {
-                        "title": f"{skill} Basics",
-                        "topics": ["Fundamentals", "Setup", "Hello World"],
-                        "duration_weeks": 2,
-                        "project": f"Mini project using {skill}"
-                    }
-                ]
-            }
+def build_roadmap_for_skill(skill: str):
 
-    # 3) Enrich with external resources
-    for phase in roadmap.get("phases", []):
-        phase["external_resources"] = {
-            "YouTube": fetch_youtube_links(skill),
-            "GitHub": fetch_github_projects(skill)
+    subtopics = generate_subtopics(skill)
+
+    final_output = {
+        "main_course": skill,
+        "duration_weeks": 8,
+        "subtopics": [],
+        "final_projects": {
+            "suggested": [
+                f"Build a complete mini-project using {skill}",
+                f"Create a portfolio-level project in {skill}"
+            ],
+            "github_references": fetch_github_projects(skill, max_results=3)
         }
-    return roadmap
+    }
+
+    for topic in subtopics:
+        final_output["subtopics"].append({
+            "title": topic,
+            "youtube_links": fetch_youtube_links(query=topic, max_results=3),
+            "project": f"Mini project based on {topic}"
+        })
+
+    return final_output
+
 
 def build_roadmap_for_skills(skills: list[str]) -> dict:
-    return {s: build_roadmap_for_skill(s) for s in skills}
+    return {skill: build_roadmap_for_skill(skill) for skill in skills}
+
+
+
