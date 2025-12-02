@@ -83,6 +83,15 @@ const jobSchema = new mongoose.Schema({
       default: "Applied"
     }
   }]
+  ,
+  matches: [{
+    student: { type: mongoose.Schema.Types.ObjectId, ref: 'Student' },
+    matchPercentage: { type: Number, default: 0 },
+    matchedSkills: [{ type: String }],
+    missingSkills: [{ type: String }],
+    method: { type: String },
+    calculatedAt: { type: Date, default: Date.now }
+  }]
 }, {
   timestamps: true
 });

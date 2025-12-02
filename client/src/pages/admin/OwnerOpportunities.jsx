@@ -133,7 +133,9 @@ export default function OwnerOpportunities() {
       }
 
       const res = await API.post('/owner/jobs', jobData)
-      alert(`Job created successfully! ${res.data.parsedSkillsCount} skills parsed. ${res.data.studentsNotified} students notified.`)
+      const parsedCount = res.data?.job?.parsedSkillsCount ?? res.data?.parsedSkillsCount ?? 0
+      const studentsNotified = res.data?.studentsNotified ?? 0
+      alert(`Job created successfully! ${parsedCount} skills parsed. ${studentsNotified} students notified.`)
       
       // Reset form
       setFormData({

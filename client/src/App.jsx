@@ -26,7 +26,10 @@ import OwnerSettings from './pages/admin/OwnerSettings'
 // Student Pages
 import StudentDashboard from './pages/student/StudentDashboard'
 import StudentProfile from './pages/student/StudentProfile'
-import StudentRoadmap from './pages/student/StudentRoadmap'
+import StudentJobs from './pages/student/Jobs'
+import StudentApplications from './pages/student/Applications'
+import StudentNotifications from './pages/StudentNotifications'
+=======
 
 
 // 🔐 Route Protection
@@ -73,6 +76,33 @@ function App() {
               element={
                 <ProtectedRoute role="student">
                   <StudentProfile />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/student/jobs"
+              element={
+                <ProtectedRoute role="student">
+                  <StudentJobs />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/student/applications"
+              element={
+                <ProtectedRoute role="student">
+                  <StudentApplications />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/student/notifications"
+              element={
+                <ProtectedRoute role="student">
+                  <StudentNotifications />
                 </ProtectedRoute>
               }
             />

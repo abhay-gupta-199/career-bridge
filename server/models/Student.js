@@ -45,6 +45,18 @@ const studentSchema = new mongoose.Schema({
   placedCompany: {
     type: String,
     trim: true
+  },
+  isBlocked: {
+    type: Boolean,
+    default: false
+  },
+  blockedAt: {
+    type: Date,
+    default: null
+  },
+  blockReason: {
+    type: String,
+    default: null
   }
 }, {
   timestamps: true
