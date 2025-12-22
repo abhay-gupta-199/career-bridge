@@ -12,6 +12,7 @@ const authRoutes = require('./routes/authRoutes');
 const studentRoutes = require('./routes/studentRoutes');
 const collegeRoutes = require('./routes/collegeRoutes');
 const ownerRoutes = require('./routes/ownerRoutes');
+const roadmapRoutes = require('./routes/roadmapRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5003;
@@ -56,6 +57,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/college', collegeRoutes);
 app.use('/api/owner', ownerRoutes);
+// Lightweight roadmap generator endpoint (demo)
+app.use('/api', roadmapRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
