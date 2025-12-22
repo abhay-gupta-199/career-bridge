@@ -29,7 +29,7 @@ import StudentProfile from './pages/student/StudentProfile'
 import StudentJobs from './pages/student/Jobs'
 import StudentApplications from './pages/student/Applications'
 import StudentNotifications from './pages/StudentNotifications'
-=======
+import StudentRoadmap from './pages/student/StudentRoadmap'
 
 
 // 🔐 Route Protection

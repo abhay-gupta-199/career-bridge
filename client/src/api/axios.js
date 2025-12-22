@@ -1,8 +1,11 @@
 import axios from 'axios'
 
-//Base URL of backend
+// Base URL of backend: prefer VITE_API_URL, fallback to localhost:5002/api
+const DEFAULT_BASE = 'http://localhost:5002/api'
+const base = import.meta?.env?.VITE_API_URL || DEFAULT_BASE
+
 const API = axios.create({
-  baseURL: 'http://localhost:5003/api',
+  baseURL: base,
   withCredentials: true,
 })
 
