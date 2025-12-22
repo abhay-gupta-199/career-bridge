@@ -5,3 +5,8 @@ server/node_modules/
 .github
 
 copilot-instructions.md
+# Env files
+.env
+server/.env
+client/.env
+client/.env.local
