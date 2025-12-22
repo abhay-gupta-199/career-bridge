@@ -210,6 +210,8 @@ matchStudentsBatch(students, jdSkills, threshold=60)
 - 🎬 Framer Motion animations
 
 **Props:**
+**Props:**
+{% raw %}
 ```javascript
 <NotificationCard
   notification={{
@@ -222,8 +224,9 @@ matchStudentsBatch(students, jdSkills, threshold=60)
   }}
   onClose={(notificationId) => {...}}
   onApply={(jobId) => {...}}
-/>
+/> 
 ```
+{% endraw %}
 
 ---
 
