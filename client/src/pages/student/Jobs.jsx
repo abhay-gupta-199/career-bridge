@@ -25,14 +25,14 @@ const JobsStudent = () => {
         const res = await API.get('/student/jobs')
         if (!mounted) return
         setJobs(res.data)
-        
+
         // Get applications to check which jobs were already applied
         const appRes = await API.get('/student/applications')
         if (mounted && appRes.data) {
           const appliedJobIds = new Set(appRes.data.map(app => app.job.id))
           setAppliedJobs(appliedJobIds)
         }
-        
+
         setError(null)
       } catch (err) {
         console.error('Error loading student jobs:', err.message)
@@ -156,7 +156,7 @@ const JobsStudent = () => {
                 return (
                   <GradientCard
                     key={job._id}
-                    gradient="from-purple-500 via-pink-500 to-red-500"
+                    gradient="from-emerald-500 via-teal-500 to-green-500"
                     delay={idx * 0.1}
                   >
                     {/* Top Section */}
@@ -166,7 +166,7 @@ const JobsStudent = () => {
                           {job.title}
                         </h3>
                         <div className="flex items-center gap-2 text-gray-600 text-sm mb-3">
-                          <span className="font-semibold text-purple-600">{job.company}</span>
+                          <span className="font-semibold text-emerald-600">{job.company}</span>
                           {job.location && (
                             <>
                               <span>•</span>
@@ -182,61 +182,60 @@ const JobsStudent = () => {
                       {/* Match Score */}
                       <motion.div
                         whileHover={{ scale: 1.1 }}
-                        className="text-center bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl p-4 min-w-20"
+                        className="text-center bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-3 min-w-[80px] shadow-sm border border-emerald-100"
                       >
-                        <div className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                        <div className="text-2xl font-bold text-emerald-600">
                           {matchPercent}%
                         </div>
-                        <div className="text-xs font-semibold text-gray-600">Match</div>
+                        <div className="text-[10px] uppercase tracking-wider font-bold text-emerald-800/60">Match</div>
                       </motion.div>
                     </div>
 
                     {/* Description */}
-                    <p className="text-gray-700 text-sm line-clamp-2 mb-4">
+                    <p className="text-gray-600 text-sm line-clamp-2 mb-4 leading-relaxed">
                       {job.description}
                     </p>
 
                     {/* Skills Section */}
-                    {(job.studentMatch?.matched_skills?.length > 0 || 
+                    {(job.studentMatch?.matched_skills?.length > 0 ||
                       job.studentMatch?.missing_skills?.length > 0) && (
-                      <div className="mb-4">
-                        <p className="text-xs font-semibold text-gray-600 mb-2">SKILLS</p>
-                        <div className="flex flex-wrap gap-2">
-                          {job.studentMatch?.matched_skills?.slice(0, 3).map((skill, idx) => (
-                            <AnimatedBadge
-                              key={`matched-${idx}`}
-                              text={skill}
-                              variant="skill"
-                              icon="✓"
-                            />
-                          ))}
-                          {job.studentMatch?.missing_skills?.slice(0, 2).map((skill, idx) => (
-                            <AnimatedBadge
-                              key={`missing-${idx}`}
-                              text={skill}
-                              variant="missing"
-                              icon="⊘"
-                            />
-                          ))}
-                          {(job.studentMatch?.matched_skills?.length ?? 0) > 3 && (
-                            <AnimatedBadge
-                              text={`+${(job.studentMatch?.matched_skills?.length ?? 0) - 3}`}
-                              variant="tag"
-                            />
-                          )}
+                        <div className="mb-4 bg-gray-50/50 p-3 rounded-xl border border-gray-100">
+                          <div className="flex flex-wrap gap-2">
+                            {job.studentMatch?.matched_skills?.slice(0, 3).map((skill, idx) => (
+                              <AnimatedBadge
+                                key={`matched-${idx}`}
+                                text={skill}
+                                variant="skill"
+                                icon="✓"
+                              />
+                            ))}
+                            {job.studentMatch?.missing_skills?.slice(0, 2).map((skill, idx) => (
+                              <AnimatedBadge
+                                key={`missing-${idx}`}
+                                text={skill}
+                                variant="missing"
+                                icon="⊘"
+                              />
+                            ))}
+                            {(job.studentMatch?.matched_skills?.length ?? 0) > 3 && (
+                              <AnimatedBadge
+                                text={`+${(job.studentMatch?.matched_skills?.length ?? 0) - 3}`}
+                                variant="tag"
+                              />
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
                     {/* Bottom Section */}
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => setSelectedJob(job)}
-                        className="px-4 py-2 text-sm font-semibold text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                        className="px-4 py-2 text-sm font-semibold text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors flex items-center gap-2"
                       >
-                        Explore
+                        View Details
                       </motion.button>
 
                       <motion.button
@@ -245,14 +244,14 @@ const JobsStudent = () => {
                         onClick={() => handleApply(job._id)}
                         disabled={isApplied}
                         className={`
-                          px-5 py-2 rounded-lg font-semibold text-sm transition-all
+                          px-6 py-2.5 rounded-xl font-bold text-sm transition-all shadow-md
                           ${isApplied
-                            ? 'bg-gray-200 text-gray-700 cursor-not-allowed'
-                            : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:shadow-lg'
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
+                            : 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:shadow-lg hover:shadow-emerald-200'
                           }
                         `}
                       >
-                        {isApplied ? '✓ Applied' : 'Apply Now'}
+                        {isApplied ? 'Applied' : 'Apply Now'}
                       </motion.button>
                     </div>
                   </GradientCard>

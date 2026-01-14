@@ -15,7 +15,7 @@ const Sidebar = () => {
     { name: "Jobs", path: "/student/jobs", icon: <FaBriefcase /> },
     { name: "Applications", path: "/student/applications", icon: <FaClipboardList /> },
     { name: "Roadmaps", path: "/student/roadmaps", icon: <FaMapMarkedAlt /> },
-    { name: "AI Recommendations", path: "/student/ai-recommendations", icon: <FaRobot /> },
+    { name: "AI Recommendations", path: "/student/recommendations", icon: <FaRobot /> },
     { name: "Notifications", path: "/student/notifications", icon: <FaBell /> },
     { name: "Profile", path: "/student/profile", icon: <FaUserGraduate /> },
   ];

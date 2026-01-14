@@ -1,160 +1,135 @@
-import React, { useState } from "react";
-import { fetchRoadmap } from "../../api/roadmapApi";
-import RoadmapViewer from "../../components/RoadmapViewer";
+import { useState } from 'react'
+import { motion } from 'framer-motion'
+import { MapPin, Zap, BookOpen, Layers, Rocket } from 'lucide-react'
+import Navbar from '../../components/Navbar'
+import Sidebar from '../../components/Sidebar'
+// import RoadmapViewer from '../../components/RoadmapViewer' // Replaced with new visualization
+import RoadmapGenerator from './RoadmapGenerator'
+import GlassCard from '../../components/ui/GlassCard'
+import AnimatedBadge from '../../components/ui/AnimatedBadge'
 
 const StudentRoadmap = () => {
-  const [skills, setSkills] = useState("");
-  const [roadmap, setRoadmap] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [source, setSource] = useState("api"); // api | local
+  const [activeTab, setActiveTab] = useState('generate') // generate | view
+  const [generatedRoadmap, setGeneratedRoadmap] = useState(null)
 
-  const handleGenerate = async () => {
-    if (!skills.trim()) return alert("Enter at least one skill!");
 
-    setLoading(true);
-    try {
-      const skillList = skills.split(",").map(s => s.trim());
-      if (source === "api") {
-        const data = await fetchRoadmap(skillList);
-        setRoadmap(data.roadmap);
-      } else {
-        const local = generateLocalRoadmap(skillList);
-        setRoadmap(local);
-      }
-    } catch (err) {
-      // fallback to local hard-coded roadmap
-      console.warn("Roadmap API failed, using local fallback:", err);
-      const skillList = skills.split(",").map(s => s.trim());
-      const local = generateLocalRoadmap(skillList);
-      setRoadmap(local);
-    }
-    setLoading(false);
-  };
-
-  const generateLocalRoadmap = (skillList) => {
-    // Basic hard-coded templates for a few common skills
-    const templates = {
-      Python: {
-        main_course: "Python for Developers",
-        duration_weeks: 6,
-        subtopics: [
-          {
-            title: "Core Python & Data Structures",
-            project: "Build a CLI todo app",
-            youtube_links: ["https://youtu.be/rfscVS0vtbw"]
-          },
-          {
-            title: "Web with Flask/Django",
-            project: "Simple blog app",
-            youtube_links: ["https://youtu.be/Z1RJmh_OqeA"]
-          },
-          {
-            title: "Data Manipulation & APIs",
-            project: "Data ETL script",
-            youtube_links: ["https://youtu.be/GPVsHOlRBBI"]
-          }
-        ],
-        final_projects: {
-          suggested: ["Personal portfolio API", "Data analysis mini-project"],
-          github_references: ["https://github.com/tiangolo/fastapi"]
-        }
-      },
-      SQL: {
-        main_course: "SQL & Databases",
-        duration_weeks: 4,
-        subtopics: [
-          { title: "Basics & Joins", project: "Design a small schema", youtube_links: ["https://youtu.be/7S_tz1z_5bA"] },
-          { title: "Indexes & Performance", project: "Optimize queries", youtube_links: ["https://youtu.be/5hzZtqCNQKk"] }
-        ],
-        final_projects: { suggested: ["Analytics dashboard"], github_references: [] }
-      },
-      React: {
-        main_course: "React Fundamentals",
-        duration_weeks: 6,
-        subtopics: [
-          { title: "Components & Props", project: "Todo app", youtube_links: ["https://youtu.be/Ke90Tje7VS0"] },
-          { title: "State & Hooks", project: "Notes app", youtube_links: ["https://youtu.be/dpw9EHDh2bM"] }
-        ],
-        final_projects: { suggested: ["Full-stack MERN app"], github_references: ["https://github.com/facebook/react"] }
-      }
-    }
-
-    const roadmap = {}
-    skillList.forEach(raw => {
-      const key = raw.charAt(0).toUpperCase() + raw.slice(1)
-      roadmap[key] = templates[key] || {
-        main_course: `${key} Fundamentals`,
-        duration_weeks: 4,
-        subtopics: [
-          { title: "Basics", project: "Practice exercises", youtube_links: [] }
-        ],
-        final_projects: { suggested: ["Capstone mini-project"], github_references: [] }
-      }
-    })
-    return roadmap
-  }
-
-  const RecommendationPanel = ({ roadmap }) => {
-    if (!roadmap) return null
-    // simple aggregated recommendations
-    const courses = [];
-    const roles = new Set();
-    Object.keys(roadmap).forEach(skill => {
-      courses.push(`${roadmap[skill].main_course} (${roadmap[skill].duration_weeks}w)`)
-      if (["Python", "SQL"].includes(skill)) roles.add("Data Engineer / Analyst")
-      if (["React"].includes(skill)) roles.add("Frontend Developer")
-    })
-
-    return (
-      <div className="bg-white p-6 rounded shadow mt-6">
-        <h3 className="text-xl font-bold mb-2">Recommendations</h3>
-        <p className="mb-2">Suggested learning sequence:</p>
-        <ul className="list-disc ml-6 mb-3">
-          {courses.map((c, i) => <li key={i}>{c}</li>)}
-        </ul>
-        <p className="mb-2">Target roles:</p>
-        <ul className="list-disc ml-6">
-          {[...roles].map((r, i) => <li key={i}>{r}</li>)}
-        </ul>
-      </div>
-    )
+  const handleRoadmapGenerated = (data) => {
+    setGeneratedRoadmap(data)
+    setActiveTab('view')
   }
 
   return (
-    <div className="p-8">
-      
-      <h1 className="text-3xl font-bold mb-4">My Learning Roadmap</h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-slate-100">
+      <Navbar />
+      <div className="flex">
+        <Sidebar activeTab="roadmaps" />
+        <main className="flex-1 px-6 py-8">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <div className="flex items-center gap-4 mb-6">
+              <div className="p-3 bg-gradient-to-br from-pink-100 to-purple-100 rounded-full">
+                <MapPin className="text-purple-600" size={32} />
+              </div>
+              <div>
+                <h1 className="text-4xl md:text-5xl font-black text-gray-900">Custom Roadmap</h1>
+                <p className="text-gray-600 text-lg">Build your own learning path using Gemini AI</p>
+              </div>
+            </div>
+          </motion.div>
 
-      <div className="bg-white p-6 rounded shadow-md max-w-xl mb-8">
-        <label className="font-semibold text-lg">Enter Skills:</label>
-        <input
-          type="text"
-          placeholder="e.g. Python, SQL, Docker"
-          className="border p-3 rounded w-full mt-2"
-          value={skills}
-          onChange={(e) => setSkills(e.target.value)}
-        />
+          {/* Toggle View (only if roadmap exists) */}
+          {generatedRoadmap && (
+            <div className="flex gap-4 mb-8">
+              <button
+                onClick={() => setActiveTab('generate')}
+                className={`px-6 py-2 rounded-full font-semibold transition-all ${activeTab === 'generate' ? 'bg-purple-600 text-white shadow-lg' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+              >
+                Generator
+              </button>
+              <button
+                onClick={() => setActiveTab('view')}
+                className={`px-6 py-2 rounded-full font-semibold transition-all ${activeTab === 'view' ? 'bg-purple-600 text-white shadow-lg' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+              >
+                View Roadmap
+              </button>
+            </div>
+          )}
 
-        <div className="mt-3">
-          <label className="text-sm font-medium mr-2">Source:</label>
-          <select value={source} onChange={(e) => setSource(e.target.value)} className="border rounded p-2">
-            <option value="api">AI API</option>
-            <option value="local">Local Demo</option>
-          </select>
-        </div>
+          {/* Content */}
+          <div className="max-w-7xl mx-auto">
+            {activeTab === 'generate' ? (
+              <RoadmapGenerator onGenerate={handleRoadmapGenerated} />
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="space-y-8"
+              >
+                {/* Roadmap Title Card */}
+                <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-8 text-white shadow-xl">
+                  <h2 className="text-3xl font-bold mb-2">{generatedRoadmap.title}</h2>
+                  <p className="text-purple-100 text-lg opacity-90">{generatedRoadmap.description}</p>
+                </div>
 
-        <button
-          onClick={handleGenerate}
-          className="mt-4 bg-blue-600 text-white px-6 py-3 rounded"
-        >
-          {loading ? "Generating..." : "Generate Roadmap"}
-        </button>
+                {/* Phases Timeline */}
+                <div className="relative border-l-4 border-purple-200 ml-6 space-y-12 pl-8 py-4">
+                  {generatedRoadmap.phases?.map((phase, idx) => (
+                    <div key={idx} className="relative">
+                      {/* Timeline Dot */}
+                      <div className="absolute -left-[46px] top-0 w-8 h-8 rounded-full bg-purple-600 border-4 border-purple-100 flex items-center justify-center shadow-lg">
+                        <span className="text-white text-xs font-bold">{idx + 1}</span>
+                      </div>
+
+                      <GlassCard className="p-6 hover:scale-[1.01] transition-transform duration-300">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-gray-100 pb-4">
+                          <h3 className="text-2xl font-bold text-gray-800">{phase.name}</h3>
+                          <span className="px-4 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-semibold">
+                            {phase.duration}
+                          </span>
+                        </div>
+
+                        <div className="space-y-6">
+                          {phase.topics?.map((topic, tIdx) => (
+                            <div key={tIdx} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                              <h4 className="font-bold text-lg text-gray-900 mb-2 flex items-center gap-2">
+                                <BookOpen size={18} className="text-blue-500" />
+                                {topic.topic}
+                              </h4>
+                              <p className="text-gray-600 mb-3 ml-7">{topic.description}</p>
+
+                              {topic.resources?.length > 0 && (
+                                <div className="ml-7 flex flex-wrap gap-2">
+                                  {topic.resources.map((res, rIdx) => (
+                                    <a
+                                      key={rIdx}
+                                      href={res.includes('http') ? res : `https://www.google.com/search?q=${res}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-xs px-3 py-1 bg-white text-blue-600 border border-blue-200 rounded-full hover:bg-blue-50 transition-colors flex items-center gap-1"
+                                    >
+                                      RESOURCE
+                                    </a>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </GlassCard>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </div>
+        </main>
       </div>
-
-      {roadmap && <RoadmapViewer roadmap={roadmap} />}
-      
     </div>
-  );
-};
+  )
+}
 
-export default StudentRoadmap;
+export default StudentRoadmap

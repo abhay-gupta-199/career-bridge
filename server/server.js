@@ -18,19 +18,38 @@ const app = express();
 const PORT = process.env.PORT || 5003;
 
 // Middleware
-const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost';
+const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:3000';
+const ALLOWED_ORIGINS = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:5173',
+  process.env.CLIENT_ORIGIN
+].filter(Boolean);
+
 app.use(cors({
   origin: function (origin, callback) {
-    // allow requests with no origin (like curl, mobile clients)
+    // Allow requests with no origin (like curl, mobile clients)
     if (!origin) return callback(null, true);
+
+    // Check if origin is in allowed list
+    if (ALLOWED_ORIGINS.includes(origin)) {
+      return callback(null, origin);
+    }
+
+    // Also check localhost/127.0.0.1 with any port
     try {
       const url = new URL(origin);
-      if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') return callback(null, true);
-    } catch (err) {}
-    if (origin === CLIENT_ORIGIN) return callback(null, true);
+      if ((url.hostname === 'localhost' || url.hostname === '127.0.0.1')) {
+        return callback(null, origin);
+      }
+    } catch (err) { }
+
     callback(new Error('Not allowed by CORS'));
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json());
@@ -59,6 +78,7 @@ app.use('/api/college', collegeRoutes);
 app.use('/api/owner', ownerRoutes);
 // Lightweight roadmap generator endpoint (demo)
 app.use('/api', roadmapRoutes);
+app.use('/api/ai/roadmap', require('./routes/aiRoadmapRoutes'));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

@@ -1,7 +1,3 @@
-
-import requests
-from ..utils.config import YOUTUBE_API_KEY
-
 import requests
 from ..utils.config import YOUTUBE_API_KEY
 

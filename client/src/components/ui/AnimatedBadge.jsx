@@ -4,11 +4,13 @@ import { motion } from 'framer-motion';
  * Animated Badge Component for skills, statuses, and tags
  * Supports different variants: skill, status, tag, match
  */
-const AnimatedBadge = ({ 
-  text, 
+const AnimatedBadge = ({
+  text,
   variant = 'skill',
   icon = null,
-  animate = true
+  animate = true,
+  className = '',
+  ...props
 }) => {
   const variants = {
     skill: 'bg-gradient-to-r from-green-400 to-emerald-600 text-white',
@@ -34,11 +36,14 @@ const AnimatedBadge = ({
       initial="hidden"
       animate="visible"
       whileHover={animate ? "hover" : ""}
+      whileTap={props.onClick ? { scale: 0.95 } : {}}
       className={`
         inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold
         shadow-md backdrop-blur-sm ${variants[variant]}
-        cursor-default transition-all duration-300
+        ${props.onClick ? 'cursor-pointer' : 'cursor-default'} transition-all duration-300
+        ${className}
       `}
+      {...props}
     >
       {icon && <span className="text-sm">{icon}</span>}
       <span>{text}</span>

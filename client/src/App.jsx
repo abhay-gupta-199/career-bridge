@@ -28,7 +28,9 @@ import StudentDashboard from './pages/student/StudentDashboard'
 import StudentProfile from './pages/student/StudentProfile'
 import StudentJobs from './pages/student/Jobs'
 import StudentApplications from './pages/student/Applications'
-import StudentNotifications from './pages/StudentNotifications'
+import StudentRecommendations from './pages/student/Recommendations'
+import StudentRoadmaps from './pages/student/StudentRoadmaps'
+import StudentNotifications from './pages/student/Notifications'
 import StudentRoadmap from './pages/student/StudentRoadmap'
 
 
@@ -45,7 +47,7 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/about" element={<About />} />
             <Route path="/jobs" element={<Jobs />} />
-            
+
             {/* Unified Signup/Login component */}
             <Route path="/signup" element={<Signup />} />
             <Route path="/login" element={<Signup />} /> {/* auto toggle to login inside Signup */}
@@ -60,9 +62,9 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            
+
             <Route
-              path="/student/roadmaps"
+              path="/student/custom-roadmap"
               element={
                 <ProtectedRoute role="student">
                   <StudentRoadmap />
@@ -70,7 +72,7 @@ function App() {
               }
             />
 
-            
+
             <Route
               path="/student/profile"
               element={
@@ -94,6 +96,24 @@ function App() {
               element={
                 <ProtectedRoute role="student">
                   <StudentApplications />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/student/recommendations"
+              element={
+                <ProtectedRoute role="student">
+                  <StudentRecommendations />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/student/roadmaps"
+              element={
+                <ProtectedRoute role="student">
+                  <StudentRoadmaps />
                 </ProtectedRoute>
               }
             />

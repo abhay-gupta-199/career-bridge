@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import Navbar from '../../components/Navbar'
 import Sidebar from '../../components/Sidebar'
+import RecommendationWidget from '../../components/RecommendationWidget'
 import API from '../../api/axios'
 import { motion } from 'framer-motion'
-import { TrendingUp, BookOpen, Target, Mail, Award, ArrowRight } from 'lucide-react'
+import { TrendingUp, BookOpen, Target, Mail, Award, ArrowRight, MapPin, X } from 'lucide-react'
 import {
   ResponsiveContainer,
   BarChart,
@@ -29,6 +30,19 @@ const StudentDashboard = () => {
   const [notifications, setNotifications] = useState([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [jobs, setJobs] = useState([])
+  const [showAllSkills, setShowAllSkills] = useState(false)
+  const [expandedJobs, setExpandedJobs] = useState(new Set())
+  const [selectedJob, setSelectedJob] = useState(null)
+  const [appliedJobs, setAppliedJobs] = useState(new Set())
+
+  const toggleJobSkills = (jobId) => {
+    setExpandedJobs(prev => {
+      const next = new Set(prev)
+      if (next.has(jobId)) next.delete(jobId)
+      else next.add(jobId)
+      return next
+    })
+  }
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -45,6 +59,11 @@ const StudentDashboard = () => {
         setNotifications(notificationsRes.data.notifications || [])
         setUnreadCount(notificationsRes.data.unreadCount || 0)
         setJobs(jobsRes.data || [])
+
+        // Populate applied jobs set
+        const appliedIds = new Set(applicationsRes.data.map(app => app.job.id || app.job._id))
+        setAppliedJobs(appliedIds)
+
       } catch (error) {
         console.error('Error loading student dashboard:', error)
       } finally {
@@ -55,10 +74,21 @@ const StudentDashboard = () => {
     fetchDashboard()
   }, [])
 
+  const handleApply = async (jobId) => {
+    try {
+      await API.post(`/student/jobs/${jobId}/apply`)
+      setAppliedJobs(prev => new Set([...prev, jobId]))
+      // Optionally refresh applications
+    } catch (err) {
+      console.error('Failed to apply:', err.message)
+      alert(err.response?.data?.message || 'Failed to apply')
+    }
+  }
+
   const handleMarkAsRead = async (notificationId) => {
     try {
       await API.put(`/student/notifications/${notificationId}/read`)
-      setNotifications(prev => 
+      setNotifications(prev =>
         prev.map(n => n._id === notificationId ? { ...n, isRead: true } : n)
       )
       setUnreadCount(prev => Math.max(0, prev - 1))
@@ -115,7 +145,7 @@ const StudentDashboard = () => {
 
           {/* Top Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <GlassCard glow delay={0.1}>
+            <GlassCard glow delay={0.1} className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-semibold text-gray-600 mb-1">Applications</p>
@@ -125,7 +155,7 @@ const StudentDashboard = () => {
               </div>
             </GlassCard>
 
-            <GlassCard glow delay={0.2}>
+            <GlassCard glow delay={0.2} className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-semibold text-gray-600 mb-1">Skills</p>
@@ -135,7 +165,7 @@ const StudentDashboard = () => {
               </div>
             </GlassCard>
 
-            <GlassCard glow delay={0.3}>
+            <GlassCard glow delay={0.3} className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-semibold text-gray-600 mb-1">Shortlisted</p>
@@ -145,7 +175,7 @@ const StudentDashboard = () => {
               </div>
             </GlassCard>
 
-            <GlassCard glow delay={0.4}>
+            <GlassCard glow delay={0.4} className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-semibold text-gray-600 mb-1">Profile</p>
@@ -187,6 +217,16 @@ const StudentDashboard = () => {
 
           {/* Main Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            {/* AI Recommendations Widget - Take full width on top */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="lg:col-span-3"
+            >
+              <RecommendationWidget />
+            </motion.div>
             {/* Notifications Section */}
             {notifications.length > 0 && (
               <motion.div
@@ -225,11 +265,10 @@ const StudentDashboard = () => {
                         initial={{ opacity: 0, x: -20 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         transition={{ delay: idx * 0.05 }}
-                        className={`p-4 rounded-xl border-2 backdrop-blur-sm transition-all ${
-                          notification.isRead
-                            ? 'bg-gray-50/50 border-gray-200'
-                            : 'bg-blue-50/50 border-blue-300 shadow-md'
-                        }`}
+                        className={`p-4 rounded-xl border-2 backdrop-blur-sm transition-all ${notification.isRead
+                          ? 'bg-gray-50/50 border-gray-200'
+                          : 'bg-blue-50/50 border-blue-300 shadow-md'
+                          }`}
                       >
                         <div className="flex justify-between items-start gap-3">
                           <div className="flex-1">
@@ -260,6 +299,7 @@ const StudentDashboard = () => {
                   {notifications.length > 5 && (
                     <motion.button
                       whileHover={{ x: 4 }}
+                      onClick={() => window.location.href = '/student/notifications'}
                       className="mt-4 w-full py-2 text-center text-sm font-semibold text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex items-center justify-center gap-2"
                     >
                       View all {notifications.length} notifications <ArrowRight size={16} />
@@ -288,7 +328,7 @@ const StudentDashboard = () => {
 
                 {dashboard?.skills && dashboard.skills.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
-                    {dashboard.skills.slice(0, 8).map((skill, idx) => (
+                    {dashboard.skills.slice(0, showAllSkills ? undefined : 8).map((skill, idx) => (
                       <AnimatedBadge
                         key={idx}
                         text={skill}
@@ -296,10 +336,19 @@ const StudentDashboard = () => {
                         icon="✨"
                       />
                     ))}
-                    {dashboard.skills.length > 8 && (
+                    {!showAllSkills && dashboard.skills.length > 8 && (
                       <AnimatedBadge
                         text={`+${dashboard.skills.length - 8} more`}
                         variant="tag"
+                        onClick={() => setShowAllSkills(true)}
+                        className="hover:bg-gray-400"
+                      />
+                    )}
+                    {showAllSkills && dashboard.skills.length > 8 && (
+                      <AnimatedBadge
+                        text="Show Less"
+                        variant="tag"
+                        onClick={() => setShowAllSkills(false)}
                       />
                     )}
                   </div>
@@ -324,45 +373,122 @@ const StudentDashboard = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {jobs.slice(0, 4).map((job, idx) => (
-                  <motion.div
-                    key={job._id}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.1 }}
-                    whileHover={{ y: -4 }}
-                    className="bg-white/80 backdrop-blur-xl rounded-xl p-5 border border-white/50 shadow-lg hover:shadow-xl transition-all"
-                  >
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <h3 className="font-bold text-gray-900">{job.title}</h3>
-                        <p className="text-sm text-purple-600 font-semibold">{job.company}</p>
-                      </div>
-                      {job.jobType && (
-                        <AnimatedBadge text={job.jobType} variant="status" />
-                      )}
-                    </div>
+                {jobs.slice(0, 4).map((job, idx) => {
+                  const isApplied = appliedJobs.has(job._id)
+                  const matchPercent = job.studentMatch?.matchPercentage ?? 0
 
-                    <p className="text-sm text-gray-600 line-clamp-2 mb-3">{job.description}</p>
+                  return (
+                    <motion.div
+                      key={job._id}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.1 }}
+                    >
+                      <GradientCard
+                        gradient="from-emerald-500 via-teal-500 to-green-500"
+                        className="h-full flex flex-col"
+                      >
+                        {/* Top Section */}
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex-1">
+                            <h3 className="text-xl font-bold text-gray-900 mb-1">
+                              {job.title}
+                            </h3>
+                            <div className="flex items-center gap-2 text-gray-600 text-sm mb-3">
+                              <span className="font-semibold text-emerald-600">{job.company}</span>
+                              {job.location && (
+                                <>
+                                  <span>•</span>
+                                  <span className="flex items-center gap-1">
+                                    <MapPin size={16} />
+                                    {job.location}
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          </div>
 
-                    {job.skillsRequired && job.skillsRequired.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {job.skillsRequired.slice(0, 3).map((skill, jdx) => (
-                          <AnimatedBadge
-                            key={jdx}
-                            text={skill}
-                            variant="tag"
-                          />
-                        ))}
-                        {job.skillsRequired.length > 3 && (
-                          <span className="text-xs text-gray-600 font-semibold">
-                            +{job.skillsRequired.length - 3}
-                          </span>
+                          {/* Match Score */}
+                          <motion.div
+                            whileHover={{ scale: 1.1 }}
+                            className="text-center bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-3 min-w-[80px] shadow-sm border border-emerald-100"
+                          >
+                            <div className="text-2xl font-bold text-emerald-600">
+                              {matchPercent}%
+                            </div>
+                            <div className="text-[10px] uppercase tracking-wider font-bold text-emerald-800/60">Match</div>
+                          </motion.div>
+                        </div>
+
+                        {/* Description */}
+                        <p className="text-gray-600 text-sm line-clamp-2 mb-4 leading-relaxed flex-1">
+                          {job.description}
+                        </p>
+
+                        {/* Skills Section */}
+                        {(job.skillsRequired?.length > 0 || job.studentMatch?.matched_skills?.length > 0) && (
+                          <div className="mb-4 bg-gray-50/50 p-3 rounded-xl border border-gray-100">
+                            <div className="flex flex-wrap gap-2">
+                              {job.studentMatch?.matched_skills?.slice(0, 3).map((skill, idx) => (
+                                <AnimatedBadge
+                                  key={`matched-${idx}`}
+                                  text={skill}
+                                  variant="skill"
+                                  icon="✓"
+                                />
+                              ))}
+                              {/* Fallback to simple skills if matched_skills not available */}
+                              {(!job.studentMatch?.matched_skills || job.studentMatch.matched_skills.length === 0) &&
+                                job.skillsRequired?.slice(0, 3).map((skill, idx) => (
+                                  <AnimatedBadge
+                                    key={`req-${idx}`}
+                                    text={skill}
+                                    variant="tag"
+                                  />
+                                ))}
+
+
+                              {(job.skillsRequired?.length > 3) && (
+                                <AnimatedBadge
+                                  text={`+${job.skillsRequired.length - 3}`}
+                                  variant="tag"
+                                />
+                              )}
+                            </div>
+                          </div>
                         )}
-                      </div>
-                    )}
-                  </motion.div>
-                ))}
+
+                        {/* Bottom Section */}
+                        <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-auto">
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setSelectedJob(job)}
+                            className="px-4 py-2 text-sm font-semibold text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors flex items-center gap-2"
+                          >
+                            Details
+                          </motion.button>
+
+                          <motion.button
+                            whileHover={!isApplied ? { scale: 1.05 } : {}}
+                            whileTap={!isApplied ? { scale: 0.95 } : {}}
+                            onClick={() => handleApply(job._id)}
+                            disabled={isApplied}
+                            className={`
+                            px-6 py-2.5 rounded-xl font-bold text-sm transition-all shadow-md
+                            ${isApplied
+                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
+                                : 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:shadow-lg hover:shadow-emerald-200'
+                              }
+                          `}
+                          >
+                            {isApplied ? 'Applied' : 'Apply Now'}
+                          </motion.button>
+                        </div>
+                      </GradientCard>
+                    </motion.div>
+                  )
+                })}
               </div>
             </motion.div>
           )}
@@ -443,6 +569,172 @@ const StudentDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Job Details Modal */}
+      {selectedJob && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => setSelectedJob(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+          >
+            {/* Modal Header */}
+            <div className="sticky top-0 z-20 bg-gradient-to-r from-purple-600 to-pink-600 text-white p-6 flex items-start justify-between">
+              <div className="flex-1">
+                <h2 className="text-2xl font-bold mb-2">{selectedJob.title}</h2>
+                <p className="text-purple-100 flex items-center gap-2">
+                  {selectedJob.company} • {selectedJob.location}
+                </p>
+              </div>
+              <motion.button
+                whileHover={{ rotate: 90, scale: 1.1 }}
+                onClick={() => setSelectedJob(null)}
+                className="text-white/80 hover:text-white flex-shrink-0 ml-4"
+              >
+                <X size={24} />
+              </motion.button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Match Score Section */}
+              <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-600 mb-1">Overall Match</p>
+                    <p className="text-sm text-gray-600">Based on your skills and experience</p>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                      {selectedJob.studentMatch?.matchPercentage ?? 0}%
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 mb-3">Description</h3>
+                <p className="text-gray-700 leading-relaxed">{selectedJob.description}</p>
+              </div>
+
+              {/* Required Skills */}
+              {selectedJob.skillsRequired?.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-3">Required Skills</h3>
+                  <div className="flex flex-wrap gap-3">
+                    {selectedJob.skillsRequired?.map((skill, idx) => (
+                      <AnimatedBadge
+                        key={idx}
+                        text={skill}
+                        variant="tag"
+                        icon="💼"
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Matched Skills */}
+              {selectedJob.studentMatch?.matched_skills?.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                    <span className="text-2xl">✅</span> Your Matched Skills
+                  </h3>
+                  <div className="flex flex-wrap gap-3">
+                    {selectedJob.studentMatch.matched_skills.map((skill, idx) => (
+                      <AnimatedBadge
+                        key={idx}
+                        text={skill}
+                        variant="skill"
+                        icon="✓"
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Missing Skills */}
+              {selectedJob.studentMatch?.missing_skills?.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                    <span className="text-2xl">📚</span> Skills to Develop
+                  </h3>
+                  <div className="flex flex-wrap gap-3">
+                    {selectedJob.studentMatch.missing_skills.map((skill, idx) => (
+                      <AnimatedBadge
+                        key={idx}
+                        text={skill}
+                        variant="missing"
+                        icon="⊘"
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Job Info */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {selectedJob.jobType && (
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <p className="text-xs font-semibold text-gray-600 mb-1">Job Type</p>
+                    <p className="text-sm font-bold text-gray-900">{selectedJob.jobType}</p>
+                  </div>
+                )}
+                {selectedJob.salaryRange && (
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <p className="text-xs font-semibold text-gray-600 mb-1">Salary</p>
+                    <p className="text-sm font-bold text-gray-900">{selectedJob.salaryRange}</p>
+                  </div>
+                )}
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <p className="text-xs font-semibold text-gray-600 mb-1">Posted</p>
+                  <p className="text-sm font-bold text-gray-900">Recently</p>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4 border-t border-gray-200">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setSelectedJob(null)}
+                  className="flex-1 px-6 py-3 border-2 border-purple-300 text-purple-600 font-semibold rounded-xl hover:bg-purple-50 transition-colors"
+                >
+                  Close
+                </motion.button>
+
+                <motion.button
+                  whileHover={!appliedJobs.has(selectedJob._id) ? { scale: 1.05 } : {}}
+                  whileTap={!appliedJobs.has(selectedJob._id) ? { scale: 0.95 } : {}}
+                  onClick={() => {
+                    handleApply(selectedJob._id)
+                    setSelectedJob(null)
+                  }}
+                  disabled={appliedJobs.has(selectedJob._id)}
+                  className={`
+                        flex-1 px-6 py-3 rounded-xl font-semibold transition-all
+                        ${appliedJobs.has(selectedJob._id)
+                      ? 'bg-gray-200 text-gray-700 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:shadow-lg'
+                    }
+                      `}
+                >
+                  {appliedJobs.has(selectedJob._id) ? '✓ Applied' : 'Apply Now'}
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
     </div>
   )
 }

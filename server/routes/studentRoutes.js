@@ -422,4 +422,179 @@ router.post('/upload-resume', authMiddleware, upload.single('resume'), async (re
   }
 })
 
+// ========================
+// ✅ Get AI Recommendations
+// ========================
+router.get('/recommendations', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'student') {
+      return res.status(403).json({ message: 'Access denied' })
+    }
+
+    const student = await Student.findById(req.user._id).select('skills name email graduationYear college')
+    
+    if (!student || !student.skills || student.skills.length === 0) {
+      return res.json({
+        recommendations: [],
+        message: 'Please add skills to your profile to get recommendations'
+      })
+    }
+
+    // Fetch active jobs
+    const jobs = await Job.find({ isActive: true })
+      .populate('postedBy', 'name company')
+      .sort({ createdAt: -1 })
+      .limit(50)
+
+    if (jobs.length === 0) {
+      return res.json({
+        recommendations: [],
+        message: 'No jobs available at the moment'
+      })
+    }
+
+    // Clean student skills
+    const studentSkills = cleanSkillArray(student.skills)
+
+    // Compute matches for all jobs
+    const recommendedJobs = []
+    for (const job of jobs) {
+      try {
+        const jobSkills = cleanSkillArray(job.skillsRequired || job.parsedSkills || [])
+        
+        if (jobSkills.length === 0) continue
+
+        const matchResult = await matchStudentWithJD(studentSkills, jobSkills)
+
+        // Only include jobs with >= 50% match
+        if (matchResult.match_percentage >= 50) {
+          recommendedJobs.push({
+            _id: job._id,
+            title: job.title,
+            company: job.company,
+            location: job.location,
+            description: job.description?.substring(0, 200) + '...',
+            salary: job.salary,
+            jobType: job.jobType,
+            matchPercentage: matchResult.match_percentage,
+            matchedSkills: matchResult.matched_skills,
+            missingSkills: matchResult.missing_skills,
+            matchMethod: matchResult.method,
+            semanticScore: matchResult.semantic_score,
+            tfidfScore: matchResult.tfidf_score,
+            hybridScore: matchResult.hybrid_score,
+            postedBy: job.postedBy?.name,
+            createdAt: job.createdAt
+          })
+        }
+      } catch (err) {
+        console.error('Error matching job', job._id, ':', err.message)
+        continue
+      }
+    }
+
+    // Sort by match percentage (highest first)
+    recommendedJobs.sort((a, b) => b.matchPercentage - a.matchPercentage)
+
+    // Get top recommendations
+    const topRecommendations = recommendedJobs.slice(0, 10)
+
+    res.json({
+      success: true,
+      totalRecommendations: recommendedJobs.length,
+      recommendations: topRecommendations,
+      studentSkills: studentSkills,
+      summary: {
+        averageMatch: Math.round(
+          recommendedJobs.reduce((sum, job) => sum + job.matchPercentage, 0) / 
+          (recommendedJobs.length || 1)
+        ),
+        jobsAvailable: jobs.length,
+        recommendedCount: topRecommendations.length
+      }
+    })
+  } catch (error) {
+    console.error('Recommendations error:', error)
+    res.status(500).json({ message: 'Server error: ' + error.message })
+  }
+})
+
+// ========================
+// ✅ Get Personalized Roadmap for Recommended Job
+// ========================
+router.post('/recommendations/:jobId/roadmap', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'student') {
+      return res.status(403).json({ message: 'Access denied' })
+    }
+
+    const { jobId } = req.params
+    const student = await Student.findById(req.user._id).select('skills')
+    const job = await Job.findById(jobId)
+
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found' })
+    }
+
+    const studentSkills = cleanSkillArray(student.skills || [])
+    const jobSkills = cleanSkillArray(job.skillsRequired || job.parsedSkills || [])
+
+    const matchResult = await matchStudentWithJD(studentSkills, jobSkills)
+    const missingSkills = matchResult.missing_skills || []
+
+    // Get roadmap from the main roadmap routes
+    const ML_API_URL = process.env.ML_API_URL || 'http://localhost:5002'
+    
+    try {
+      const roadmapResponse = await axios.post(
+        `${ML_API_URL}/generate-roadmap`,
+        { skills: missingSkills },
+        { timeout: 15000 }
+      )
+
+      res.json({
+        success: true,
+        jobTitle: job.title,
+        company: job.company,
+        matchPercentage: matchResult.match_percentage,
+        missingSkills,
+        roadmap: roadmapResponse.data.roadmap || {},
+        recommendations: roadmapResponse.data.recommendations || {}
+      })
+    } catch (mlErr) {
+      console.warn('ML API unavailable, using fallback roadmap')
+      
+      // Fallback: generate simple roadmap
+      const fallbackRoadmap = {}
+      missingSkills.forEach(skill => {
+        fallbackRoadmap[skill] = {
+          main_course: `${skill} for ${job.title}`,
+          duration_weeks: 4,
+          subtopics: [
+            { title: `${skill} Basics`, project: 'Practice exercises' },
+            { title: `${skill} Advanced`, project: 'Mini project' }
+          ],
+          final_projects: {
+            suggested: [`Complete ${skill} project`],
+            github_references: []
+          }
+        }
+      })
+
+      res.json({
+        success: true,
+        jobTitle: job.title,
+        company: job.company,
+        matchPercentage: matchResult.match_percentage,
+        missingSkills,
+        roadmap: fallbackRoadmap,
+        recommendations: { roles: ['Focus on missing skills'] }
+      })
+    }
+  } catch (error) {
+    console.error('Roadmap error:', error)
+    res.status(500).json({ message: 'Server error: ' + error.message })
+  }
+})
+
 module.exports = router

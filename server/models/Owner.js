@@ -26,8 +26,7 @@ const ownerSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true
-  }
-  ,
+  },
   twoFactorEnabled: {
     type: Boolean,
     default: false

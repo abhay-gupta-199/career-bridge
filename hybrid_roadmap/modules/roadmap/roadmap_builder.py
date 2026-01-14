@@ -8,11 +8,6 @@ from .fetchers import fetch_youtube_links, fetch_github_projects
 
 def build_roadmap_for_skill(skill: str):
 
-    subtopics = generate_subtopics(skill)
-
-    final_output = {
-        "main_course": skill,
-        "duration_weeks": 8,
         "subtopics": [],
         "final_projects": {
             "suggested": [
@@ -35,6 +30,5 @@ def build_roadmap_for_skill(skill: str):
 
 def build_roadmap_for_skills(skills: list[str]) -> dict:
     return {skill: build_roadmap_for_skill(skill) for skill in skills}
-
 
 

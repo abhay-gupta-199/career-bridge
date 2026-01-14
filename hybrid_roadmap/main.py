@@ -6,7 +6,6 @@ from modules.roadmap.roadmap_builder import build_roadmap_for_skills
 from modules.recommender.job_semantic import recommend_jobs_semantic
 
 
-
 def ats_skill_pipeline(resume_path: str, jd_text: str, skills_csv_path: str) -> dict:
     """Main ATS pipeline: extract resume skills, compare with JD, compute score & roadmap."""
 
