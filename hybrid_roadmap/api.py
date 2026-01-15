@@ -1,3 +1,6 @@
+import warnings
+warnings.filterwarnings('ignore', message='Core Pydantic V1 functionality')
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from modules.parsing.jd_parser import parse_jd
@@ -5,6 +8,7 @@ from modules.parsing.resume_parser import parse_resume
 from modules.recommender.jd_reume import  match_resume_jd_semantic
 from modules.recommender.job_semantic import recommend_jobs_semantic
 from routes.roadmap_routes import roadmap_bp
+from routes.personalized_roadmap_routes import personalized_roadmap_bp
 
 import os
 
@@ -14,8 +18,9 @@ CORS(app)  # Enable CORS for all routes
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# REGISTER NEW ROUTE
+# REGISTER BLUEPRINTS
 app.register_blueprint(roadmap_bp, url_prefix="/api")
+app.register_blueprint(personalized_roadmap_bp, url_prefix="/api")
 
 
 SKILLS_CSV = "data/skills.csv"
@@ -191,5 +196,6 @@ def full_process_route():
 
 
 if __name__ == "__main__":
-    port = int(os.environ.get('PORT', 5002))
+    port = int(os.environ.get('PORT', 5004))
     app.run(debug=True, host='0.0.0.0', port=port)
+

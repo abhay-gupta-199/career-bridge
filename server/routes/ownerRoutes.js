@@ -13,9 +13,9 @@ const router = express.Router();
 
 /**
  * Enhanced Job Matching with Notifications
- * Matches all students against a new JD and sends notifications
+ * Matches all students against a new JD and sends notifications based on notifyTarget
  */
-const matchStudentsWithJobAndNotify = async (jobId, jdSkills, threshold = 75) => {
+const matchStudentsWithJobAndNotify = async (jobId, jdSkills, threshold = 75, notifyTarget = 'student', collegeId = null) => {
   try {
     const job = await Job.findById(jobId).populate('postedBy', 'name company');
     if (!job) {
@@ -23,10 +23,21 @@ const matchStudentsWithJobAndNotify = async (jobId, jdSkills, threshold = 75) =>
       return { matched: 0, notified: 0, errors: [] };
     }
 
-    // Fetch all students (we will handle those without skills inside the matcher)
-    const students = await Student.find({});
-
-    console.log(`📊 Computing matches for ${students.length} students against job: ${job.title}`);
+    // Determine which students to fetch based on notification target
+    let students = [];
+    if (notifyTarget === 'college' && collegeId) {
+      // Get students from specific college
+      const college = await College.findById(collegeId);
+      if (!college) {
+        return { matched: 0, notified: 0, errors: ['College not found'] };
+      }
+      students = await Student.find({ college: college.name });
+      console.log(`📊 Computing matches for ${students.length} students from college ${college.name}`);
+    } else {
+      // Get all students
+      students = await Student.find({});
+      console.log(`📊 Computing matches for ${students.length} students (all)`);
+    }
 
     if (!students || students.length === 0) {
       return { matched: 0, notified: 0, errors: ['No students found'] };
@@ -58,7 +69,7 @@ const matchStudentsWithJobAndNotify = async (jobId, jdSkills, threshold = 75) =>
       m && typeof m.matchPercentage === 'number' && m.matchPercentage >= threshold && m.studentId && m.studentEmail
     );
 
-    console.log(`✅ ${notifyList.length} students meet the >=${threshold}% threshold`);
+    console.log(`✅ ${notifyList.length} students meet the >=${threshold}% threshold for ${notifyTarget}`);
 
     // Create notifications and send emails for notifyList
     const notifications = [];
@@ -68,6 +79,7 @@ const matchStudentsWithJobAndNotify = async (jobId, jdSkills, threshold = 75) =>
       try {
         const notification = new Notification({
           student: match.studentId,
+          college: notifyTarget === 'college' ? collegeId : null,
           job: jobId,
           message: `New job opportunity: ${job.title} at ${job.company} - ${match.matchPercentage}% skill match!`,
           matchPercentage: match.matchPercentage,
@@ -77,6 +89,7 @@ const matchStudentsWithJobAndNotify = async (jobId, jdSkills, threshold = 75) =>
           semanticScore: match.semanticScore || null,
           tfidfScore: match.tfidfScore || null,
           hybridScore: match.hybridScore || null,
+          notifyTarget: notifyTarget,
           type: 'job_match'
         });
 
@@ -259,7 +272,8 @@ router.post('/jobs', authMiddleware, async (req, res) => {
       salary,
       experience,
       jobType,
-      postedBy: req.user._id
+      postedBy: req.user._id,
+      createdByType: "owner"
     });
 
     await job.save();

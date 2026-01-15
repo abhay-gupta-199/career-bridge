@@ -1,12 +1,152 @@
-# Node modules
+# ============================================
+# ENVIRONMENT & SECRETS (CRITICAL - HIGHEST PRIORITY)
+# ============================================
+# Never commit API keys, passwords, or credentials
+.env
+.env.local
+.env.*.local
+*.env
+server/.env
+client/.env
+hybrid_roadmap/.env
+model_ml/.env
+
+# OAuth & Token files
+.oauth
+.tokens
+tokens.json
+credentials.json
+
+# API Keys (if accidentally created)
+**/api_keys.json
+**/secrets.json
+**/credentials/
+
+# ============================================
+# NODE.JS
+# ============================================
 node_modules/
 client/node_modules/
 server/node_modules/
-.github
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+package-lock.json
+yarn.lock
 
+# Build outputs
+dist/
+build/
+.next/
+out/
+client/dist/
+server/dist/
+
+# ============================================
+# PYTHON & VIRTUAL ENVIRONMENTS
+# ============================================
+# Virtual environments - NEVER commit these!
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv
+hybrid_roadmap/venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Python packages
+*.egg-info/
+*.eggs/
+dist/
+build/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# ============================================
+# SENSITIVE DATA & CREDENTIALS
+# ============================================
+# Files that might contain secrets
+*secret*
+*password*
+*api*key*
+*token*
+*credentials*
+*sensitive*
+cookies.txt
+cookies.json
+
+# Database credentials
+mongodb.log
+*.db
+*.sqlite
+*.sqlite3
+
+# ============================================
+# IDE & EDITOR FILES
+# ============================================
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+.editorconfig
+
+# ============================================
+# LOGS & TEMPORARY FILES
+# ============================================
+logs/
+*.log
+*.log.*
+error.log
+debug.log
+tmp.json
+temp.json
+test-data.json
+tmp/
+temp/
+
+# ============================================
+# MISC FILES
+# ============================================
+.github
 copilot-instructions.md
-# Env files
-.env
-server/.env
-client/.env
-client/.env.local
+.cache/
+__pycache__/
+Thumbs.db
+
+# ============================================
+# PROJECT UPLOADS & BUILD ARTIFACTS
+# ============================================
+uploads/
+model_ml/**/*.ipynb_checkpoints/
+server/uploads/
+hybrid_roadmap/uploads/
+
+# ============================================
+# CRITICAL REMINDER
+# ============================================
+# This .gitignore prevents:
+# ✅ GEMINI_API_KEY from being exposed
+# ✅ EMAIL_PASS (Gmail password) from being exposed
+# ✅ MongoDB credentials from being exposed
+# ✅ JWT secrets from being exposed
+# ✅ All environment variables from being exposed
+# ✅ Python venv from being committed (500MB+)
+# ✅ Node modules from being committed (400MB+)
+#
+# IF YOU ACCIDENTALLY COMMITTED SECRETS:
+# 1. Regenerate API keys immediately at:
+#    - https://aistudio.google.com/apikey (Gemini)
+#    - https://myaccount.google.com/apppasswords (Gmail)
+# 2. Remove from git history:
+#    git rm --cached .env server/.env hybrid_roadmap/.env
+#    git commit -m "Remove secrets from version control"
+# 3. Force push: git push --force-with-lease

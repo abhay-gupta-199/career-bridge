@@ -68,6 +68,16 @@ const jobSchema = new mongoose.Schema({
     ref: "Owner",
     required: true
   },
+  postedByCollege: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "College",
+    default: null
+  },
+  createdByType: {
+    type: String,
+    enum: ["owner", "college"],
+    default: "owner"
+  },
   applications: [{
     student: {
       type: mongoose.Schema.Types.ObjectId,

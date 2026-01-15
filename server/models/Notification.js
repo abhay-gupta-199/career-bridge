@@ -6,6 +6,11 @@ const notificationSchema = new mongoose.Schema({
     ref: "Student",
     required: true
   },
+  college: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "College",
+    default: null
+  },
   job: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Job",
@@ -63,6 +68,12 @@ const notificationSchema = new mongoose.Schema({
     enum: ["job_match", "application_status", "general"],
     default: "job_match"
   },
+  // Who this notification is sent to
+  notifyTarget: {
+    type: String,
+    enum: ["student", "college", "all"],
+    default: "student"
+  },
   // Student action status
   studentAction: {
     type: String,
@@ -77,6 +88,7 @@ const notificationSchema = new mongoose.Schema({
 notificationSchema.index({ student: 1, createdAt: -1 });
 notificationSchema.index({ student: 1, isRead: 1 });
 notificationSchema.index({ job: 1 });
+notificationSchema.index({ college: 1, createdAt: -1 });
 
 module.exports = mongoose.model("Notification", notificationSchema);
 

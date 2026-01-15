@@ -78,7 +78,6 @@ app.use('/api/college', collegeRoutes);
 app.use('/api/owner', ownerRoutes);
 // Lightweight roadmap generator endpoint (demo)
 app.use('/api', roadmapRoutes);
-app.use('/api/ai/roadmap', require('./routes/aiRoadmapRoutes'));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

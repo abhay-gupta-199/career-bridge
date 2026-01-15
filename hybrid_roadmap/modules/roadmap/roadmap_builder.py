@@ -7,7 +7,11 @@ from .fallback_data import load_curated_data
 from .fetchers import fetch_youtube_links, fetch_github_projects
 
 def build_roadmap_for_skill(skill: str):
+    subtopics = generate_subtopics(skill)
 
+    final_output = {
+        "main_course": skill,
+        "duration_weeks": 8,
         "subtopics": [],
         "final_projects": {
             "suggested": [

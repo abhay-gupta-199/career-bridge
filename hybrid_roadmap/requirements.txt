@@ -8,13 +8,8 @@ PyPDF2
 pandas
 requests
 numpy
-
-# LangChain + Ollama (for roadmap AI)
-langchain
-langchain-core
-langchain-community
-langchain-ollama
-ollama
+# Google Gemini API (new SDK)
+google-genai
 
 # FastAPI Backend (your team already added these)
 fastapi

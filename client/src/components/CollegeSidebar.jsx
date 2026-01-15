@@ -4,7 +4,9 @@ import {
   FaUsers, 
   FaChartBar, 
   FaBriefcase, 
-  FaUniversity 
+  FaUniversity,
+  FaPlus,
+  FaList
 } from "react-icons/fa";
 
 const CollegeSidebar = () => {
@@ -13,6 +15,8 @@ const CollegeSidebar = () => {
     { name: "Students", path: "/college/dashboard/students", icon: <FaUsers /> },
     { name: "Statistics", path: "/college/dashboard/statistics", icon: <FaChartBar /> },
     { name: "Placements", path: "/college/dashboard/placements", icon: <FaBriefcase /> },
+    { name: "Post Job", path: "/college/dashboard/post-job", icon: <FaPlus />, badge: "NEW" },
+    { name: "My Jobs", path: "/college/dashboard/jobs", icon: <FaList /> },
   ];
 
   const gradientStyle = {
@@ -42,7 +46,7 @@ const CollegeSidebar = () => {
             to={link.path}
             end
             className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+              `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 relative ${
                 isActive
                   ? "bg-gradient-to-r from-[#10002b] via-[#4b006e] to-[#240046] text-white shadow-lg"
                   : "text-gray-700 hover:bg-gradient-to-r hover:from-[#f0f0f5] hover:via-[#e0e0f0] hover:to-[#ffffff] hover:text-[#240046]"
@@ -58,6 +62,11 @@ const CollegeSidebar = () => {
                   {link.icon}
                 </span>
                 <span>{link.name}</span>
+                {link.badge && (
+                  <span className="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                    {link.badge}
+                  </span>
+                )}
               </>
             )}
           </NavLink>
