@@ -30,15 +30,27 @@ const ownerSchema = new mongoose.Schema({
   twoFactorEnabled: {
     type: Boolean,
     default: false
+  },
+  settings: {
+    theme: { type: String, default: 'light' },
+    notifications: {
+      email: { type: Boolean, default: true },
+      sms: { type: Boolean, default: false },
+      inApp: { type: Boolean, default: true }
+    },
+    systemConfig: {
+      maintenanceMode: { type: Boolean, default: false },
+      apiKey: { type: String, default: '' }
+    }
   }
 }, {
   timestamps: true
 });
 
 // Hash password before saving
-ownerSchema.pre('save', async function(next) {
+ownerSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
-  
+
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
@@ -49,7 +61,7 @@ ownerSchema.pre('save', async function(next) {
 });
 
 // Compare password method
-ownerSchema.methods.comparePassword = async function(candidatePassword) {
+ownerSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 

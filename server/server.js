@@ -17,48 +17,48 @@ const roadmapRoutes = require('./routes/roadmapRoutes');
 const app = express();
 const PORT = process.env.PORT || 5003;
 
-// Middleware
-const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:3000';
-const ALLOWED_ORIGINS = [
-  'http://localhost:3000',
-  'http://localhost:5173',
-  'http://127.0.0.1:3000',
-  'http://127.0.0.1:5173',
-  process.env.CLIENT_ORIGIN
-].filter(Boolean);
-
-app.use(cors({
+// ✅ CORS Configuration - Define once, use everywhere
+const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (like curl, mobile clients)
     if (!origin) return callback(null, true);
-
-    // Check if origin is in allowed list
-    if (ALLOWED_ORIGINS.includes(origin)) {
-      return callback(null, origin);
-    }
-
-    // Also check localhost/127.0.0.1 with any port
+    
+    // Allow all localhost and 127.0.0.1 origins
     try {
       const url = new URL(origin);
-      if ((url.hostname === 'localhost' || url.hostname === '127.0.0.1')) {
+      if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
         return callback(null, origin);
       }
-    } catch (err) { }
-
-    callback(new Error('Not allowed by CORS'));
+    } catch (err) {}
+    
+    callback(null, false); // Reject other origins
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 200,
+  maxAge: 86400
+};
 
+// Apply CORS to all routes
+app.use(cors(corsOptions));
+
+// Handle preflight requests explicitly
+app.options('*', cors(corsOptions));
+
+// Middleware
 app.use(express.json());
 
 app.use(session({
   secret: process.env.SESSION_SECRET || 'mysecret',
   resave: false,
-  saveUninitialized: true,
-  cookie: { maxAge: 10 * 60 * 1000, sameSite: 'lax' } // 10 minutes
+  saveUninitialized: false,
+  cookie: { 
+    maxAge: 10 * 60 * 1000,
+    sameSite: 'lax',
+    secure: false,
+    httpOnly: true
+  }
 }));
 
 // ✅ Connect to MongoDB Atlas
@@ -78,7 +78,6 @@ app.use('/api/college', collegeRoutes);
 app.use('/api/owner', ownerRoutes);
 // Lightweight roadmap generator endpoint (demo)
 app.use('/api', roadmapRoutes);
-app.use('/api/ai/roadmap', require('./routes/aiRoadmapRoutes'));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

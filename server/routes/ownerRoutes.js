@@ -6,6 +6,8 @@ const Job = require('../models/Job');
 const Student = require('../models/Student');
 const College = require('../models/College');
 const Notification = require('../models/Notification');
+const Feedback = require('../models/Feedback');
+const Announcement = require('../models/Announcement');
 const { matchStudentsBatch, cleanSkillArray, computeMatchesForAllStudents } = require('../utils/matchingEngine');
 const { sendEmail } = require('../utils/sendEmail');
 
@@ -115,7 +117,7 @@ const matchStudentsWithJobAndNotify = async (jobId, jdSkills, threshold = 75) =>
     return {
       matched: allMatches.length,
       notified: notifications.length,
-      errors: [] ,
+      errors: [],
       details: notifyList.map(m => ({ studentId: m.studentId, name: m.studentName, matchPercentage: m.matchPercentage }))
     };
   } catch (error) {
@@ -215,23 +217,23 @@ router.post('/jobs', authMiddleware, async (req, res) => {
 
     // Parse JD using ML API
     let parsedSkills = [];
-    
+
     try {
       const ML_API_URL = process.env.ML_API_URL || 'http://localhost:5002';
       const jdText = description || '';
-      
+
       if (jdText) {
         const mlResponse = await axios.post(`${ML_API_URL}/parse-jd`, {
           jd_text: jdText
         }, {
           timeout: 15000
         });
-        
+
         if (mlResponse.data.status === 'success' && mlResponse.data.jd_skill_weights) {
-            // Extract skills from skill weights (keys are skills)
-            parsedSkills = Object.keys(mlResponse.data.jd_skill_weights || {}).filter(Boolean);
-            console.log(`✅ Parsed ${parsedSkills.length} skills from JD`);
-          }
+          // Extract skills from skill weights (keys are skills)
+          parsedSkills = Object.keys(mlResponse.data.jd_skill_weights || {}).filter(Boolean);
+          console.log(`✅ Parsed ${parsedSkills.length} skills from JD`);
+        }
       }
     } catch (mlError) {
       console.error('⚠️ ML API Error (JD parsing):', mlError.message);
@@ -239,7 +241,7 @@ router.post('/jobs', authMiddleware, async (req, res) => {
     }
 
     // Combine manual skills and parsed skills
-    const manualSkills = skillsRequired ? 
+    const manualSkills = skillsRequired ?
       skillsRequired.split(',').map(skill => skill && String(skill).trim()).filter(s => s) : [];
 
     // Clean and normalize all skills to avoid undefined values
@@ -277,7 +279,7 @@ router.post('/jobs', authMiddleware, async (req, res) => {
 
     if (matchResult && matchResult.timedOut) {
       // Matching is still running — return immediate response and indicate background processing
-      res.status(201).json({ 
+      res.status(201).json({
         message: 'Job created successfully',
         job: {
           id: job._id,
@@ -299,7 +301,7 @@ router.post('/jobs', authMiddleware, async (req, res) => {
     } else {
       // Matching finished within timeout — return real counts
       const result = matchResult || { matched: 0, notified: 0, errors: [] };
-      res.status(201).json({ 
+      res.status(201).json({
         message: 'Job created and matching completed',
         job: {
           id: job._id,
@@ -382,7 +384,7 @@ router.delete('/jobs/:jobId', authMiddleware, async (req, res) => {
     }
 
     await Job.findByIdAndDelete(req.params.jobId);
-    
+
     // Also delete associated notifications
     await Notification.deleteMany({ job: req.params.jobId });
 
@@ -425,10 +427,9 @@ router.get('/colleges', authMiddleware, async (req, res) => {
     const query = College.find()
       .select('-password')
       .sort({ createdAt: -1 });
+    const allColleges = limit ? await query.limit(limit) : await query;
 
-    const colleges = limit ? await query.limit(limit) : await colleges;
-
-    res.json(colleges);
+    res.json(allColleges);
   } catch (error) {
     console.error('Get all colleges error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -720,6 +721,358 @@ router.get('/students-export/csv', authMiddleware, async (req, res) => {
     res.send(csvContent);
   } catch (error) {
     console.error('CSV export error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Approve a college
+router.post('/colleges/:id/approve', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'owner') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const college = await College.findByIdAndUpdate(
+      req.params.id,
+      { isApproved: true },
+      { new: true }
+    );
+
+    if (!college) {
+      return res.status(404).json({ message: 'College not found' });
+    }
+
+    res.json({ message: 'College approved successfully', college });
+  } catch (error) {
+    console.error('Approve college error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Reject a college (delete or mark as rejected - here we delete for simplicity as per common pattern)
+router.post('/colleges/:id/reject', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'owner') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const college = await College.findByIdAndDelete(req.params.id);
+
+    if (!college) {
+      return res.status(404).json({ message: 'College not found' });
+    }
+
+    res.json({ message: 'College rejected and removed successfully' });
+  } catch (error) {
+    console.error('Reject college error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get all feedback
+router.get('/feedback', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'owner') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const feedback = await Feedback.find().sort({ createdAt: -1 });
+    res.json(feedback);
+  } catch (error) {
+    console.error('Get feedback error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Resolve feedback
+router.post('/feedback/:id/resolve', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'owner') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const feedback = await Feedback.findByIdAndUpdate(
+      req.params.id,
+      { status: 'resolved' },
+      { new: true }
+    );
+
+    if (!feedback) {
+      return res.status(404).json({ message: 'Feedback not found' });
+    }
+
+    res.json({ message: 'Feedback resolved successfully', feedback });
+  } catch (error) {
+    console.error('Resolve feedback error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Submit feedback (Public or authenticated)
+router.post('/feedback/submit', async (req, res) => {
+  try {
+    const { title, message, email, type, rating } = req.body;
+
+    if (!title || !message || !email) {
+      return res.status(400).json({ message: 'Title, message, and email are required' });
+    }
+
+    const feedback = new Feedback({
+      title,
+      message,
+      email,
+      type,
+      rating
+    });
+
+    await feedback.save();
+    res.status(201).json({ message: 'Feedback submitted successfully', feedback });
+  } catch (error) {
+    console.error('Submit feedback error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// --- Reports & Analytics Routes ---
+
+// Get summary stats
+router.get('/reports/summary', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'owner') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const [studentsCount, collegesCount, jobsCount] = await Promise.all([
+      Student.countDocuments(),
+      College.countDocuments(),
+      Job.countDocuments()
+    ]);
+
+    // Aggregate unique skills from students
+    const students = await Student.find({}, 'skills');
+    const allSkills = new Set();
+    students.forEach(s => s.skills.forEach(skill => allSkills.add(skill.toLowerCase())));
+
+    res.json({
+      totalUsers: studentsCount + collegesCount,
+      totalOpportunities: jobsCount,
+      totalSkills: allSkills.size
+    });
+  } catch (error) {
+    console.error('Summary report error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get opportunities by college
+router.get('/reports/opportunities', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'owner') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const opportunities = await Job.aggregate([
+      {
+        $group: {
+          _id: "$postedBy",
+          count: { $sum: 1 },
+          onModel: { $first: "$onModel" }
+        }
+      }
+    ]);
+
+    // Populate college names for those posted by College
+    const result = await Promise.all(opportunities.map(async (item) => {
+      if (item.onModel === 'College') {
+        const college = await College.findById(item._id, 'name');
+        return { department: college?.name || 'Unknown College', count: item.count };
+      } else {
+        return { department: 'Owner/Main', count: item.count };
+      }
+    }));
+
+    res.json(result);
+  } catch (error) {
+    console.error('Opportunities report error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get skill distribution (Top 5 skills)
+router.get('/reports/skills', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'owner') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const students = await Student.find({}, 'skills');
+    const skillCounts = {};
+
+    students.forEach(s => {
+      s.skills.forEach(skill => {
+        const normalized = skill.toLowerCase().trim();
+        skillCounts[normalized] = (skillCounts[normalized] || 0) + 1;
+      });
+    });
+
+    const sortedSkills = Object.entries(skillCounts)
+      .map(([skill, value]) => ({ skill, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5);
+
+    res.json(sortedSkills);
+  } catch (error) {
+    console.error('Skills report error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// --- Export Data Routes ---
+
+// Get all students for CSV export
+router.get('/reports/export/students', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'owner') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const students = await Student.find({}, 'name email college graduationYear isPlaced placedCompany createdAt').lean();
+    res.json(students);
+  } catch (error) {
+    console.error('Export students error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get all jobs for CSV export
+router.get('/reports/export/jobs', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'owner') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const jobs = await Job.find({}, 'title company location jobType salary.min salary.max experience.min experience.max isActive createdAt').lean();
+
+    // Flatten salary and experience for CSV
+    const flattenedJobs = jobs.map(j => ({
+      ...j,
+      salaryMin: j.salary?.min,
+      salaryMax: j.salary?.max,
+      expMin: j.experience?.min,
+      expMax: j.experience?.max,
+      salary: undefined,
+      experience: undefined
+    }));
+
+    res.json(flattenedJobs);
+  } catch (error) {
+    console.error('Export jobs error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get owner settings
+router.get('/settings', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'owner') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const owner = await Owner.findById(req.user._id).select('settings');
+    if (!owner) {
+      return res.status(404).json({ message: 'Owner not found' });
+    }
+
+    res.json(owner.settings || {
+      theme: 'light',
+      notifications: { email: true, sms: false, inApp: true },
+      systemConfig: { maintenanceMode: false, apiKey: '' }
+    });
+  } catch (error) {
+    console.error('Get settings error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Update owner settings
+router.post('/settings', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'owner') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const { theme, notifications, systemConfig } = req.body;
+
+    const owner = await Owner.findById(req.user._id);
+    if (!owner) {
+      return res.status(404).json({ message: 'Owner not found' });
+    }
+
+    // Merge or overwrite settings
+    owner.settings = {
+      theme: theme || owner.settings?.theme || 'light',
+      notifications: {
+        ...(owner.settings?.notifications || {}),
+        ...(notifications || {})
+      },
+      systemConfig: {
+        ...(owner.settings?.systemConfig || {}),
+        ...(systemConfig || {})
+      }
+    };
+
+    await owner.save();
+    res.json({ message: 'Settings updated successfully', settings: owner.settings });
+  } catch (error) {
+    console.error('Update settings error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// --- Announcements Routes ---
+
+// Get announcement history
+router.get('/announcements', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'owner') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const announcements = await Announcement.find()
+      .populate('sender', 'name')
+      .sort({ createdAt: -1 });
+    res.json(announcements);
+  } catch (error) {
+    console.error('Get announcements error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Create new announcement
+router.post('/announcements', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'owner') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const { title, message, target } = req.body;
+
+    if (!title || !message) {
+      return res.status(400).json({ message: 'Title and message are required' });
+    }
+
+    const announcement = new Announcement({
+      title,
+      message,
+      target: target || 'all',
+      sender: req.user._id,
+      status: 'sent' // Simplified for now
+    });
+
+    await announcement.save();
+    res.status(201).json({ message: 'Announcement created successfully', announcement });
+  } catch (error) {
+    console.error('Create announcement error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

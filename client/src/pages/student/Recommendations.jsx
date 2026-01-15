@@ -16,16 +16,15 @@ const StudentRecommendations = () => {
   const [summary, setSummary] = useState(null)
   const [refreshing, setRefreshing] = useState(false)
   const [appliedJobs, setAppliedJobs] = useState(new Set())
-  const [selectedJob, setSelectedJob] = useState(null)
 
   const fetchRecommendations = async (isRefresh = false) => {
     try {
       if (isRefresh) setRefreshing(true)
       else setLoading(true)
-
+      
       setError(null)
       const data = await getRecommendations()
-
+      
       setRecommendations(data.recommendations || [])
       setSummary(data.summary)
     } catch (err) {
@@ -67,7 +66,7 @@ const StudentRecommendations = () => {
       <Navbar />
       <div className="flex">
         <Sidebar activeTab="recommendations" />
-
+        
         <main className="flex-1 px-6 py-8">
           {/* Header Section */}
           <motion.div
@@ -184,7 +183,6 @@ const StudentRecommendations = () => {
                 job={job}
                 index={index}
                 onApply={handleApply}
-                onDetails={setSelectedJob}
               />
             ))}
           </div>
@@ -207,149 +205,11 @@ const StudentRecommendations = () => {
           )}
         </main>
       </div>
-
-      {/* Job Details Modal */}
-      {selectedJob && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={() => setSelectedJob(null)}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
-        >
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
-          >
-            {/* Modal Header */}
-            <div className="sticky top-0 z-20 bg-gradient-to-r from-purple-600 to-pink-600 text-white p-6 flex items-start justify-between">
-              <div className="flex-1">
-                <h2 className="text-2xl font-bold mb-2">{selectedJob.title}</h2>
-                <p className="text-purple-100 flex items-center gap-2">
-                  {selectedJob.company} • {selectedJob.location || 'Location not specified'}
-                </p>
-              </div>
-              <motion.button
-                whileHover={{ rotate: 90, scale: 1.1 }}
-                onClick={() => setSelectedJob(null)}
-                className="text-white/80 hover:text-white flex-shrink-0 ml-4"
-              >
-                <X size={24} />
-              </motion.button>
-            </div>
-
-            <div className="p-6 space-y-6">
-              {/* Match Score Section */}
-              <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-gray-600 mb-1">Overall Match</p>
-                    <p className="text-sm text-gray-600">Based on your skills and experience</p>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                      {selectedJob.matchPercentage}%
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Description */}
-              <div>
-                <h3 className="text-lg font-bold text-gray-900 mb-3">Description</h3>
-                <p className="text-gray-700 leading-relaxed">{selectedJob.description}</p>
-              </div>
-
-              {/* Matched Skills */}
-              {selectedJob.matchedSkills?.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                    <span className="text-2xl">✅</span> Matched Skills
-                  </h3>
-                  <div className="flex flex-wrap gap-3">
-                    {selectedJob.matchedSkills.map((skill, idx) => (
-                      <AnimatedBadge
-                        key={`matched-${idx}`}
-                        text={skill}
-                        variant="skill"
-                        icon="✓"
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Missing Skills */}
-              {selectedJob.missingSkills?.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                    <span className="text-2xl">⚠</span> Missing Skills
-                  </h3>
-                  <div className="flex flex-wrap gap-3">
-                    {selectedJob.missingSkills.map((skill, idx) => (
-                      <AnimatedBadge
-                        key={`missing-${idx}`}
-                        text={skill}
-                        variant="missing"
-                        icon="!"
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Job Info */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {selectedJob.jobType && (
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <p className="text-xs font-semibold text-gray-600 mb-1">Job Type</p>
-                    <p className="text-sm font-bold text-gray-900">{selectedJob.jobType}</p>
-                  </div>
-                )}
-                {selectedJob.salary && (
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <p className="text-xs font-semibold text-gray-600 mb-1">Salary</p>
-                    <p className="text-sm font-bold text-gray-900">
-                      {selectedJob.salary.min && selectedJob.salary.max
-                        ? `₹${selectedJob.salary.min}L - ₹${selectedJob.salary.max}L`
-                        : 'Not specified'}
-                    </p>
-                  </div>
-                )}
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-xs font-semibold text-gray-600 mb-1">Match Method</p>
-                  <p className="text-sm font-bold text-gray-900">
-                    {selectedJob.matchMethod === 'ml-semantic' ? 'AI-Powered' : 'Skill Match'}
-                  </p>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-3 pt-4 border-t border-gray-200">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setSelectedJob(null)}
-                  className="flex-1 px-6 py-3 border-2 border-purple-300 text-purple-600 font-semibold rounded-xl hover:bg-purple-50 transition-colors"
-                >
-                  Close
-                </motion.button>
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
     </div>
   )
 }
 
-
 // Import missing icon
-import { Briefcase, X } from 'lucide-react'
-import AnimatedBadge from '../../components/ui/AnimatedBadge'
+import { Briefcase } from 'lucide-react'
 
 export default StudentRecommendations
-

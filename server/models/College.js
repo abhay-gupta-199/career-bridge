@@ -46,15 +46,27 @@ const collegeSchema = new mongoose.Schema({
   placedStudents: {
     type: Number,
     default: 0
+  },
+  isApproved: {
+    type: Boolean,
+    default: false
+  },
+  isBlocked: {
+    type: Boolean,
+    default: false
+  },
+  blockReason: {
+    type: String,
+    trim: true
   }
 }, {
   timestamps: true
 });
 
 // Hash password before saving
-collegeSchema.pre('save', async function(next) {
+collegeSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
-  
+
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
@@ -65,7 +77,7 @@ collegeSchema.pre('save', async function(next) {
 });
 
 // Compare password method
-collegeSchema.methods.comparePassword = async function(candidatePassword) {
+collegeSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 

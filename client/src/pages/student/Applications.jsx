@@ -110,45 +110,10 @@ const Applications = () => {
 
           {/* Stats Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <GradientCard gradient="from-blue-500 via-cyan-500 to-teal-500" delay={0} className="h-full">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-gray-600 mb-1">Total</p>
-                  <p className="text-3xl font-black text-blue-600">{stats.total}</p>
-                </div>
-                <div className="text-4xl">📋</div>
-              </div>
-            </GradientCard>
-
-            <GradientCard gradient="from-purple-500 via-pink-500 to-red-500" delay={0.1} className="h-full">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-gray-600 mb-1">Applied</p>
-                  <p className="text-3xl font-black text-purple-600">{stats.applied}</p>
-                </div>
-                <div className="text-4xl">✅</div>
-              </div>
-            </GradientCard>
-
-            <GradientCard gradient="from-green-500 via-emerald-500 to-teal-500" delay={0.2} className="h-full">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-gray-600 mb-1">Shortlisted</p>
-                  <p className="text-3xl font-black text-green-600">{stats.shortlisted}</p>
-                </div>
-                <div className="text-4xl">⭐</div>
-              </div>
-            </GradientCard>
-
-            <GradientCard gradient="from-red-500 via-orange-500 to-yellow-500" delay={0.3} className="h-full">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-gray-600 mb-1">Rejected</p>
-                  <p className="text-3xl font-black text-red-600">{stats.rejected}</p>
-                </div>
-                <div className="text-4xl">❌</div>
-              </div>
-            </GradientCard>
+            <GradientCard title="Total" value={stats.total} icon="📋" delay={0} />
+            <GradientCard title="Applied" value={stats.applied} icon="✅" delay={0.1} />
+            <GradientCard title="Shortlisted" value={stats.shortlisted} icon="⭐" delay={0.2} />
+            <GradientCard title="Rejected" value={stats.rejected} icon="❌" delay={0.3} />
           </div>
 
           {/* Filter Buttons */}
@@ -183,7 +148,7 @@ const Applications = () => {
               <SkeletonLoader count={4} />
             </div>
           ) : error ? (
-            <GlassCard glow className="p-6">
+            <GlassCard glow>
               <div className="text-center py-12">
                 <p className="text-red-600 font-semibold">{error}</p>
                 <button
@@ -195,7 +160,7 @@ const Applications = () => {
               </div>
             </GlassCard>
           ) : filteredApplications.length === 0 ? (
-            <GlassCard glow className="p-6">
+            <GlassCard glow>
               <div className="text-center py-12">
                 <Briefcase className="w-16 h-16 mx-auto text-gray-300 mb-4" />
                 <p className="text-gray-600 text-lg font-semibold mb-2">No applications yet</p>
@@ -215,7 +180,7 @@ const Applications = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
                 >
-                  <GlassCard glow className="p-6">
+                  <GlassCard glow>
                     <div className="flex items-start justify-between gap-4">
                       {/* Left Content */}
                       <div className="flex-1">

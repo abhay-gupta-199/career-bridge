@@ -88,7 +88,7 @@ const StudentNotifications = () => {
 
           {/* Stats Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-            <GlassCard glow className="p-6">
+            <GlassCard glow>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-semibold text-gray-600 mb-1">Total</p>
@@ -98,7 +98,7 @@ const StudentNotifications = () => {
               </div>
             </GlassCard>
 
-            <GlassCard glow className="p-6">
+            <GlassCard glow>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-semibold text-gray-600 mb-1">Unread</p>
@@ -108,7 +108,7 @@ const StudentNotifications = () => {
               </div>
             </GlassCard>
 
-            <GlassCard glow className="p-6">
+            <GlassCard glow>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-semibold text-gray-600 mb-1">Read</p>
@@ -133,10 +133,11 @@ const StudentNotifications = () => {
               <button
                 key={btn.key}
                 onClick={() => setFilter(btn.key)}
-                className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-all ${filter === btn.key
+                className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-all ${
+                  filter === btn.key
                     ? 'bg-gradient-to-r from-yellow-600 to-orange-600 text-white shadow-lg'
                     : 'bg-white text-gray-700 border border-gray-200 hover:border-yellow-300'
-                  }`}
+                }`}
               >
                 {btn.label} ({btn.count})
               </button>
@@ -149,7 +150,7 @@ const StudentNotifications = () => {
               <SkeletonLoader count={4} />
             </div>
           ) : filteredNotifications.length === 0 ? (
-            <GlassCard glow className="p-6">
+            <GlassCard glow>
               <div className="text-center py-12">
                 <Bell className="w-16 h-16 mx-auto text-gray-300 mb-4" />
                 <p className="text-gray-600 text-lg font-semibold mb-2">No notifications</p>
@@ -169,15 +170,16 @@ const StudentNotifications = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
                 >
-                  <GlassCard glow className="p-6">
+                  <GlassCard glow>
                     <div className="flex items-start justify-between gap-4">
                       {/* Left Content */}
                       <div className="flex-1 flex gap-4">
                         {/* Icon */}
-                        <div className={`p-3 rounded-lg flex-shrink-0 ${notification.isRead
+                        <div className={`p-3 rounded-lg flex-shrink-0 ${
+                          notification.isRead
                             ? 'bg-gray-100'
                             : 'bg-gradient-to-br from-yellow-100 to-orange-100'
-                          }`}>
+                        }`}>
                           {notification.isRead ? (
                             <CheckCircle2 className="text-gray-500" size={20} />
                           ) : (

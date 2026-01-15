@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
-import axios from 'axios'
+import { motion, AnimatePresence } from 'framer-motion'
+import API from '../../api/axios'
 import Navbar from '../../components/Navbar'
 import OwnerSidebar from '../../components/OwnerSidebar'
-import { Send, Bell, Loader2, Search } from 'lucide-react'
+import GlassCard from '../../components/ui/GlassCard'
+import { Megaphone, Send, History, User, Users, School, Trash2, Clock, Sparkles } from 'lucide-react'
 
 export default function OwnerNotifications() {
   const [title, setTitle] = useState('')
@@ -10,208 +12,200 @@ export default function OwnerNotifications() {
   const [target, setTarget] = useState('all')
   const [loading, setLoading] = useState(false)
   const [notifications, setNotifications] = useState([])
-  const [filtered, setFiltered] = useState([])
-  const [search, setSearch] = useState('')
-  const [stats, setStats] = useState(null)
+  const [filteredNotifications, setFilteredNotifications] = useState([])
 
   useEffect(() => {
     fetchNotifications()
   }, [])
 
-  // Fetch previous notifications
   const fetchNotifications = async () => {
     try {
-      const res = await axios.get('/api/owner/notifications')
-      const data = res.data.reverse() // newest first
+      const { data } = await API.get('/owner/notifications')
       setNotifications(data)
-      setFiltered(data)
-      calculateStats(data)
-    } catch (err) {
-      console.error(err)
+      setFilteredNotifications(data)
+    } catch (error) {
+      console.error(error)
     }
   }
 
-  const calculateStats = (data) => {
-    const total = data.length
-    const success = data.filter((n) => n.status === 'sent').length
-    const failed = data.filter((n) => n.status === 'failed').length
-    const lastSent = total > 0 ? data[0].createdAt : null
-    setStats({ total, success, failed, lastSent })
-  }
-
-  const sendNotification = async () => {
-    if (!title || !message) return alert('Please fill out all fields')
+  const handleSend = async (e) => {
+    e.preventDefault()
+    setLoading(true)
     try {
-      setLoading(true)
-      await axios.post('/api/owner/notifications', { title, message, target })
-      alert('✅ Notification sent successfully')
+      await API.post('/owner/notifications', { title, message, target })
       setTitle('')
       setMessage('')
-      setTarget('all')
       fetchNotifications()
-    } catch (err) {
-      alert('❌ Error sending notification')
-      console.error(err)
+      alert('Announcement broadcasted successfully!')
+    } catch (error) {
+      alert('Failed to send announcement')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleSearch = (e) => {
-    const value = e.target.value.toLowerCase()
-    setSearch(value)
-    setFiltered(
-      notifications.filter(
-        (n) =>
-          n.title.toLowerCase().includes(value) ||
-          n.message.toLowerCase().includes(value)
-      )
-    )
+  const deleteNotification = async (id) => {
+    if (!window.confirm('Delete this announcement?')) return
+    try {
+      await API.delete(`/owner/notifications/${id}`)
+      fetchNotifications()
+    } catch (error) {
+      alert('Error deleting announcement')
+    }
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-slate-50">
       <Navbar />
-
-      <div className="flex flex-1">
+      <div className="flex pt-16 h-screen overflow-hidden">
         <OwnerSidebar />
 
-        <div className="flex-1 p-6 space-y-6">
+        <main className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
           {/* Header */}
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-              <Bell className="text-blue-600" /> Notifications
-            </h1>
-            <p className="text-gray-600">
-              Send announcements and view notification history
-            </p>
-          </div>
-
-          {/* Stats Overview */}
-          {stats && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="card">
-                <p className="text-sm text-gray-600">Total Notifications</p>
-                <h2 className="text-2xl font-bold text-blue-600">{stats.total}</h2>
-              </div>
-              <div className="card">
-                <p className="text-sm text-gray-600">Delivered</p>
-                <h2 className="text-2xl font-bold text-green-600">{stats.success}</h2>
-              </div>
-              <div className="card">
-                <p className="text-sm text-gray-600">Failed</p>
-                <h2 className="text-2xl font-bold text-red-600">{stats.failed}</h2>
-              </div>
-              <div className="card">
-                <p className="text-sm text-gray-600">Last Sent</p>
-                <h2 className="text-md font-semibold text-gray-800">
-                  {stats.lastSent
-                    ? new Date(stats.lastSent).toLocaleString()
-                    : 'N/A'}
-                </h2>
-              </div>
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex flex-col md:flex-row md:items-center justify-between gap-4"
+          >
+            <div>
+              <h1 className="text-4xl font-bold text-slate-900">
+                Announcements Center
+              </h1>
+              <p className="text-gray-500 font-medium">Send system-wide announcements and alerts</p>
             </div>
-          )}
+            <Sparkles className="text-purple-600 hidden md:block" size={48} />
+          </motion.div>
 
-          {/* === Send Notification Form === */}
-          <div className="card space-y-4 p-6 border border-gray-200 shadow-sm">
-            <h2 className="text-xl font-semibold text-gray-800">Send New Notification</h2>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Enter notification title"
-                className="border rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
-              />
-              <select
-                value={target}
-                onChange={(e) => setTarget(e.target.value)}
-                className="border rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="all">All Users</option>
-                <option value="students">Students</option>
-                <option value="colleges">Colleges</option>
-              </select>
-            </div>
-
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Enter your message"
-              rows={4}
-              className="border rounded-lg p-2 focus:ring-2 focus:ring-blue-500 w-full"
-            />
-
-            <button
-              onClick={sendNotification}
-              disabled={loading}
-              className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-60"
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Create Announcement */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
             >
-              {loading ? (
-                <>
-                  <Loader2 className="animate-spin w-5 h-5" /> Sending...
-                </>
-              ) : (
-                <>
-                  <Send className="w-5 h-5" /> Send Notification
-                </>
-              )}
-            </button>
-          </div>
+              <GlassCard className="p-8 border-white/60 h-full" glow={false}>
+                <h2 className="text-xl font-bold text-slate-800 mb-8 flex items-center gap-3">
+                  <Send className="text-purple-600" size={24} /> New Announcement
+                </h2>
 
-          {/* === Search Bar === */}
-          <div className="relative w-full sm:w-1/3">
-            <Search className="absolute left-3 top-2.5 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              value={search}
-              onChange={handleSearch}
-              placeholder="Search notifications"
-              className="w-full pl-10 pr-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          {/* === Notification History === */}
-          <div className="card border border-gray-200 p-4">
-            <h2 className="text-lg font-semibold text-gray-800 mb-3">
-              Notification History
-            </h2>
-
-            {filtered.length > 0 ? (
-              <div className="divide-y">
-                {filtered.map((n) => (
-                  <div
-                    key={n._id}
-                    className="py-3 flex flex-col sm:flex-row sm:justify-between sm:items-center"
-                  >
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{n.title}</h3>
-                      <p className="text-gray-600 text-sm">{n.message}</p>
-                      <p className="text-xs text-gray-400 mt-1">
-                        Sent to: {n.target?.toUpperCase() || 'ALL'} •{' '}
-                        {new Date(n.createdAt).toLocaleString()}
-                      </p>
+                <form onSubmit={handleSend} className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Target Audience</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { id: 'all', label: 'Everyone', icon: Users },
+                        { id: 'student', label: 'Students', icon: User },
+                        { id: 'college', label: 'Colleges', icon: School }
+                      ].map((t) => (
+                        <button
+                          key={t.id}
+                          type="button"
+                          onClick={() => setTarget(t.id)}
+                          className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all duration-300 ${target === t.id
+                            ? 'bg-purple-50 border-purple-500 text-purple-600 shadow-lg shadow-purple-500/10'
+                            : 'bg-white border-slate-100 text-slate-400 hover:border-purple-200 hover:text-purple-400'
+                            }`}
+                        >
+                          <t.icon size={20} />
+                          <span className="text-[10px] font-bold uppercase tracking-widest">{t.label}</span>
+                        </button>
+                      ))}
                     </div>
-                    <span
-                      className={`mt-2 sm:mt-0 text-xs px-2 py-1 rounded-full ${
-                        n.status === 'sent'
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-red-100 text-red-700'
-                      }`}
-                    >
-                      {n.status === 'sent' ? 'Sent' : 'Failed'}
-                    </span>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-500 text-center py-4">
-                No notifications found
-              </p>
-            )}
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Title</label>
+                    <input
+                      required
+                      type="text"
+                      className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-slate-800 font-bold focus:outline-none focus:ring-4 focus:ring-purple-500/10 focus:border-purple-300 transition-all"
+                      placeholder="e.g. System Maintenance Update"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Message Content</label>
+                    <textarea
+                      required
+                      rows="6"
+                      className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-slate-800 font-bold focus:outline-none focus:ring-4 focus:ring-purple-500/10 focus:border-purple-300 transition-all font-bold"
+                      placeholder="Write your announcement here..."
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                    />
+                  </div>
+
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    disabled={loading}
+                    type="submit"
+                    className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-2xl shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 transition-all uppercase tracking-widest text-xs flex items-center justify-center gap-3 disabled:opacity-50"
+                  >
+                    <Send size={18} className={loading ? 'animate-pulse' : ''} />
+                    {loading ? 'Broadcasting...' : 'Dispatch Announcement'}
+                  </motion.button>
+                </form>
+              </GlassCard>
+            </motion.div>
+
+            {/* Previous Announcements */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <GlassCard className="p-8 border-white/60 h-full flex flex-col" glow={false}>
+                <h2 className="text-xl font-bold text-slate-800 mb-8 flex items-center gap-3">
+                  <History className="text-pink-600" size={24} /> Broadcast History
+                </h2>
+
+                <div className="flex-1 space-y-4 overflow-y-auto pr-2 custom-scrollbar max-h-[600px]">
+                  {notifications.length > 0 ? (
+                    notifications.map((n, idx) => (
+                      <motion.div
+                        key={n._id}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: idx * 0.05 }}
+                        className="p-5 bg-white border border-slate-100 rounded-2xl hover:shadow-lg hover:shadow-purple-500/5 transition-all group border-l-4 border-l-purple-500"
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <span className="inline-block px-2 py-0.5 bg-purple-50 text-purple-600 text-[8px] font-bold uppercase tracking-widest rounded-md mb-1">
+                              Target: {n.target}
+                            </span>
+                            <h3 className="font-bold text-slate-800 group-hover:text-purple-600 transition-colors">{n.title}</h3>
+                          </div>
+                          <button
+                            onClick={() => deleteNotification(n._id)}
+                            className="p-2 text-slate-300 hover:text-rose-500 transition-colors"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                        <p className="text-xs text-slate-500 font-medium mb-4 line-clamp-2 leading-relaxed">
+                          {n.message}
+                        </p>
+                        <div className="flex items-center gap-1.5 text-slate-400">
+                          <Clock size={12} />
+                          <span className="text-[10px] font-bold uppercase">{new Date(n.createdAt).toLocaleString()}</span>
+                        </div>
+                      </motion.div>
+                    ))
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+                      <History size={48} className="opacity-20 mb-4" />
+                      <p className="font-bold text-sm uppercase tracking-widest">No previous broadcasts</p>
+                    </div>
+                  )}
+                </div>
+              </GlassCard>
+            </motion.div>
           </div>
-        </div>
+        </main>
       </div>
     </div>
   )

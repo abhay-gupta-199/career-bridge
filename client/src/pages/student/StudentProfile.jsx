@@ -196,7 +196,7 @@ const StudentProfile = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
               >
-                <GlassCard glow className="p-6">
+                <GlassCard glow>
                   <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 bg-purple-100 rounded-lg">
                       <User className="text-purple-600" size={20} />
@@ -311,7 +311,7 @@ const StudentProfile = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
               >
-                <GlassCard glow className="p-6">
+                <GlassCard glow>
                   <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 bg-blue-100 rounded-lg">
                       <Upload className="text-blue-600" size={20} />
@@ -375,7 +375,7 @@ const StudentProfile = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <GlassCard glow className="p-6">
+              <GlassCard glow>
                 <div className="flex items-center gap-3 mb-6">
                   <div className="p-2 bg-green-100 rounded-lg">
                     <BookOpen className="text-green-600" size={20} />

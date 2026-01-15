@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { MapPin, Briefcase, TrendingUp, Plus, ChevronRight, AlertCircle } from 'lucide-react'
 import { applyForJob } from '../api/recommendationApi'
 
-const RecommendationCard = ({ job, index, onApply, onDetails }) => {
+const RecommendationCard = ({ job, index, onApply }) => {
   const [applying, setApplying] = useState(false)
   const [applied, setApplied] = useState(false)
   const [error, setError] = useState(null)
@@ -161,12 +161,13 @@ const RecommendationCard = ({ job, index, onApply, onDetails }) => {
         <button
           onClick={handleApply}
           disabled={applying || applied}
-          className={`flex-1 py-2 px-4 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-all ${applied
-            ? 'bg-green-600 text-white'
-            : applying
+          className={`flex-1 py-2 px-4 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-all ${
+            applied
+              ? 'bg-green-600 text-white'
+              : applying
               ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
               : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:shadow-lg'
-            }`}
+          }`}
         >
           {applied ? (
             <>
@@ -184,10 +185,7 @@ const RecommendationCard = ({ job, index, onApply, onDetails }) => {
             </>
           )}
         </button>
-        <button
-          onClick={() => onDetails && onDetails(job)}
-          className="py-2 px-4 rounded-lg font-semibold text-sm bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 transition-all flex items-center gap-1"
-        >
+        <button className="py-2 px-4 rounded-lg font-semibold text-sm bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 transition-all flex items-center gap-1">
           <ChevronRight className="w-4 h-4" />
           <span>Details</span>
         </button>

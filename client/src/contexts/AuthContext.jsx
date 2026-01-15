@@ -43,8 +43,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await API.post(
         '/auth/login',
-        { email, password, role },
-        { withCredentials: true }
+        { email, password, role }
       )
 
       // If backend says OTP needed
@@ -88,15 +87,13 @@ export const AuthProvider = ({ children }) => {
           `/auth/register/${role}`,
           formData,
           {
-            withCredentials: true,
             headers: { 'Content-Type': 'multipart/form-data' }
           }
         );
       } else {
         response = await API.post(
           `/auth/register/${role}`,
-          userData,
-          { withCredentials: true }
+          userData
         );
       }
 

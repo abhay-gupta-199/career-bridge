@@ -29,7 +29,7 @@ const cleanSkill = (skill) => {
  */
 const cleanSkillArray = (skills) => {
   if (!Array.isArray(skills)) return [];
-  
+
   return [
     ...new Set(
       skills
@@ -168,7 +168,7 @@ const performMLMatching = async (resumeSkills, jdSkills) => {
 
     if (response.data.status === 'success' && response.data.match_result) {
       const result = response.data.match_result;
-      
+
       return {
         status: 'success',
         method: 'ml-semantic',
@@ -182,10 +182,15 @@ const performMLMatching = async (resumeSkills, jdSkills) => {
     }
 
     // If ML API returns success but no match_result, fallback
-    console.warn('⚠️ ML API returned invalid response structure');
+    console.warn('⚠️ ML API returned invalid response');
     return performSimpleMatching(resumeSkills, jdSkills);
   } catch (error) {
-    console.error('⚠️ ML API error:', error.message);
+    // Suppress repeated ML API connection errors to avoid log spam
+    if (error.code === 'ECONNREFUSED') {
+      // Silent fail or very minimal log for connection refused
+    } else {
+      console.warn('⚠️ ML API unavailable:', error.message);
+    }
     // Fallback to simple matching if ML service is down
     return performSimpleMatching(resumeSkills, jdSkills);
   }
@@ -380,5 +385,5 @@ module.exports = {
   performMLMatching,
   matchAllStudentsWithJD,
   matchStudentsBatch
-  ,computeMatchesForAllStudents
+  , computeMatchesForAllStudents
 };
