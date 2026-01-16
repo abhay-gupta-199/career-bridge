@@ -96,11 +96,11 @@ Make it practical, detailed, and achievable in ${daysLeft} days. Focus on indust
     // Extract JSON from response
     const textContent = response.data.candidates[0].content.parts[0].text
     const jsonMatch = textContent.match(/\{[\s\S]*\}/)
-    
+
     if (jsonMatch) {
       return JSON.parse(jsonMatch[0])
     }
-    
+
     return JSON.parse(textContent)
   } catch (err) {
     console.error('Gemini API error:', err.message)
@@ -121,8 +121,8 @@ router.post('/generate-job-roadmap', authMiddleware, async (req, res) => {
 
     const student = await Student.findById(req.user._id)
     const resumeSkills = (student && Array.isArray(student.skills)) ? student.skills : []
-    const jdSkills = (Array.isArray(job.parsedSkills) && job.parsedSkills.length > 0) 
-      ? job.parsedSkills 
+    const jdSkills = (Array.isArray(job.parsedSkills) && job.parsedSkills.length > 0)
+      ? job.parsedSkills
       : (Array.isArray(job.skillsRequired) ? job.skillsRequired : [])
 
     const matchResult = await matchStudentWithJD(resumeSkills, jdSkills)
@@ -191,5 +191,100 @@ router.post('/generate-job-roadmap', authMiddleware, async (req, res) => {
     res.status(500).json({ message: 'Server error', details: err.message })
   }
 })
+
+// Personalized roadmap for a student based on their profile and career goals
+router.post('/generate-student-roadmap', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'student') return res.status(403).json({ message: 'Access denied' });
+
+    const student = await Student.findById(req.user._id);
+    if (!student) return res.status(404).json({ message: 'Student not found' });
+
+    const { careerGoal, targetSkills, daysAvailable } = req.body;
+
+    if (!careerGoal && (!targetSkills || targetSkills.length === 0)) {
+      return res.status(400).json({ message: 'Either careerGoal or targetSkills are required' });
+    }
+
+    const studentSkills = (student && Array.isArray(student.skills)) ? student.skills : [];
+    const skillsToLearn = targetSkills && targetSkills.length > 0 ? targetSkills : [];
+
+    // If careerGoal is provided but targetSkills are not, we might infer them or ask Gemini to suggest
+    // For simplicity, let's assume if careerGoal is provided, Gemini will infer missing skills
+    // If targetSkills are provided, we use them directly.
+
+    let missingSkillsForRoadmap = skillsToLearn;
+    let jobTitleForPrompt = careerGoal || 'Desired Career Path';
+    let companyForPrompt = 'Various Companies'; // General roadmap
+
+    // If no specific target skills are provided but a career goal is, let Gemini figure out what's missing
+    if (careerGoal && (!targetSkills || targetSkills.length === 0)) {
+      // This is a simplified approach. A more advanced version might use Gemini to first identify
+      // skills needed for the career goal, then compare with student's skills.
+      // For now, we'll just pass the career goal and let Gemini suggest skills to learn.
+      missingSkillsForRoadmap = [`skills for ${careerGoal}`]; // Placeholder, Gemini will interpret
+      jobTitleForPrompt = careerGoal;
+    } else if (targetSkills && targetSkills.length > 0) {
+      // If target skills are explicitly provided, we use them.
+      // We can also compare them against student's current skills to find truly "missing" ones.
+      const currentSkillsSet = new Set(studentSkills.map(s => s.toLowerCase()));
+      missingSkillsForRoadmap = targetSkills.filter(skill => !currentSkillsSet.has(skill.toLowerCase()));
+      if (missingSkillsForRoadmap.length === 0) {
+        missingSkillsForRoadmap = targetSkills; // If student already has all, still generate roadmap for mastery
+      }
+    }
+
+    const effectiveDaysAvailable = daysAvailable && daysAvailable > 0 ? daysAvailable : 30; // Default to 30 days
+
+    let roadmapContent;
+    try {
+      roadmapContent = await generateRoadmapWithGemini(
+        jobTitleForPrompt,
+        companyForPrompt,
+        missingSkillsForRoadmap,
+        effectiveDaysAvailable,
+        studentSkills
+      );
+    } catch (geminiErr) {
+      console.warn('Gemini API failed for student roadmap, using fallback:', geminiErr.message);
+      // Fallback to simple roadmap
+      const skillsToDisplay = missingSkillsForRoadmap.length > 0 ? missingSkillsForRoadmap : (targetSkills || []);
+      roadmapContent = {
+        overview: `Learn ${skillsToDisplay.join(', ')} for your career goal: ${careerGoal || 'General Development'}`,
+        skillsToLearn: skillsToDisplay.map(skill => ({
+          name: skill,
+          description: `Master ${skill} for your career advancement`,
+          estimatedDays: Math.max(1, Math.floor(effectiveDaysAvailable / Math.max(1, skillsToDisplay.length))),
+          difficulty: 'Intermediate',
+          modules: [
+            {
+              title: `${skill} Fundamentals`,
+              description: `Core concepts of ${skill}`,
+              estimatedHours: 20,
+              resources: [
+                { type: 'course', title: `${skill} Masterclass`, url: `https://www.google.com/search?q=${skill}+tutorial` },
+                { type: 'documentation', title: 'Official Docs', url: `https://www.google.com/search?q=${skill}+documentation` }
+              ],
+              project: { title: `Build with ${skill}`, description: `Create a project using ${skill}` }
+            }
+          ]
+        }))
+      };
+    }
+
+    const output = {
+      student: { id: student._id, name: student.name, careerGoal: careerGoal },
+      days_available: effectiveDaysAvailable,
+      target_skills: targetSkills,
+      roadmap: roadmapContent
+    };
+
+    res.json(output);
+
+  } catch (err) {
+    console.error('generate-student-roadmap error:', err);
+    res.status(500).json({ message: 'Server error', details: err.message });
+  }
+});
 
 module.exports = router
