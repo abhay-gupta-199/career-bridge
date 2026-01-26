@@ -1,256 +1,211 @@
 import { useEffect, useState } from 'react'
-import axios from 'axios'
+import { motion, AnimatePresence } from 'framer-motion'
+import API from '../../api/axios'
 import Navbar from '../../components/Navbar'
 import OwnerSidebar from '../../components/OwnerSidebar'
-import { Send, Bell, Loader2, Search, Users, Building } from 'lucide-react'
+import GlassCard from '../../components/ui/GlassCard'
+import { Megaphone, Send, History, User, Users, School, Trash2, Clock, Sparkles } from 'lucide-react'
 
 export default function OwnerNotifications() {
   const [title, setTitle] = useState('')
   const [message, setMessage] = useState('')
   const [target, setTarget] = useState('all')
-  const [notifyTarget, setNotifyTarget] = useState('student') // NEW: student or college
   const [loading, setLoading] = useState(false)
   const [notifications, setNotifications] = useState([])
-  const [filtered, setFiltered] = useState([])
-  const [search, setSearch] = useState('')
-  const [stats, setStats] = useState(null)
+  const [filteredNotifications, setFilteredNotifications] = useState([])
 
   useEffect(() => {
     fetchNotifications()
   }, [])
 
-  // Fetch previous notifications
   const fetchNotifications = async () => {
     try {
-      const res = await axios.get('/api/owner/notifications')
-      const data = res.data.reverse() // newest first
+      const { data } = await API.get('/owner/notifications')
       setNotifications(data)
-      setFiltered(data)
-      calculateStats(data)
-    } catch (err) {
-      console.error(err)
+      setFilteredNotifications(data)
+    } catch (error) {
+      console.error(error)
     }
   }
 
-  const calculateStats = (data) => {
-    const total = data.length
-    const success = data.filter((n) => n.status === 'sent').length
-    const failed = data.filter((n) => n.status === 'failed').length
-    const lastSent = total > 0 ? data[0].createdAt : null
-    const studentNotif = data.filter((n) => n.notifyTarget === 'student').length
-    const collegeNotif = data.filter((n) => n.notifyTarget === 'college').length
-    setStats({ total, success, failed, lastSent, studentNotif, collegeNotif })
-  }
-
-  const sendNotification = async () => {
-    if (!title || !message) return alert('Please fill out all fields')
+  const handleSend = async (e) => {
+    e.preventDefault()
+    setLoading(true)
     try {
-      setLoading(true)
-      await axios.post('/api/owner/notifications', { 
-        title, 
-        message, 
-        target,
-        notifyTarget 
-      })
-      alert(`✅ Notification sent to ${notifyTarget === 'student' ? 'all students' : notifyTarget === 'college' ? 'all colleges' : 'all users'}!`)
+      await API.post('/owner/notifications', { title, message, target })
       setTitle('')
       setMessage('')
-      setTarget('all')
-      setNotifyTarget('student')
       fetchNotifications()
-    } catch (err) {
-      alert('❌ Error sending notification')
-      console.error(err)
+      alert('Announcement broadcasted successfully!')
+    } catch (error) {
+      alert('Failed to send announcement')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleSearch = (e) => {
-    const value = e.target.value.toLowerCase()
-    setSearch(value)
-    setFiltered(
-      notifications.filter(
-        (n) =>
-          n.title.toLowerCase().includes(value) ||
-          n.message.toLowerCase().includes(value)
-      )
-    )
+  const deleteNotification = async (id) => {
+    if (!window.confirm('Delete this announcement?')) return
+    try {
+      await API.delete(`/owner/notifications/${id}`)
+      fetchNotifications()
+    } catch (error) {
+      alert('Error deleting announcement')
+    }
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-slate-50">
       <Navbar />
-
-      <div className="flex flex-1">
+      <div className="flex pt-16 h-screen overflow-hidden">
         <OwnerSidebar />
 
-        <div className="flex-1 p-6 space-y-6">
+        <main className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
           {/* Header */}
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-              <Bell className="text-blue-600" /> Notifications
-            </h1>
-            <p className="text-gray-600">
-              Send targeted announcements and manage notification history
-            </p>
-          </div>
-
-          {/* Enhanced Stats Overview */}
-          {stats && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-              <div className="card bg-blue-50 border-l-4 border-blue-500">
-                <p className="text-sm text-gray-600">Total Sent</p>
-                <h2 className="text-2xl font-bold text-blue-600">{stats.total}</h2>
-              </div>
-              <div className="card bg-green-50 border-l-4 border-green-500">
-                <p className="text-sm text-gray-600">Delivered</p>
-                <h2 className="text-2xl font-bold text-green-600">{stats.success}</h2>
-              </div>
-              <div className="card bg-red-50 border-l-4 border-red-500">
-                <p className="text-sm text-gray-600">Failed</p>
-                <h2 className="text-2xl font-bold text-red-600">{stats.failed}</h2>
-              </div>
-              <div className="card bg-purple-50 border-l-4 border-purple-500">
-                <p className="text-sm text-gray-600">To Students</p>
-                <h2 className="text-2xl font-bold text-purple-600">{stats.studentNotif}</h2>
-              </div>
-              <div className="card bg-orange-50 border-l-4 border-orange-500">
-                <p className="text-sm text-gray-600">To Colleges</p>
-                <h2 className="text-2xl font-bold text-orange-600">{stats.collegeNotif}</h2>
-              </div>
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex flex-col md:flex-row md:items-center justify-between gap-4"
+          >
+            <div>
+              <h1 className="text-4xl font-bold text-slate-900">
+                Announcements Center
+              </h1>
+              <p className="text-gray-500 font-medium">Send system-wide announcements and alerts</p>
             </div>
-          )}
+            <Sparkles className="text-purple-600 hidden md:block" size={48} />
+          </motion.div>
 
-          {/* Send Notification Form */}
-          <div className="card bg-white shadow-lg">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">📤 Send New Notification</h2>
-            
-            <div className="space-y-4">
-              {/* Notify Target Selection */}
-              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  Who should receive this notification? <span className="text-red-500">*</span>
-                </label>
-                <div className="grid grid-cols-3 gap-3">
-                  <button
-                    onClick={() => setNotifyTarget('student')}
-                    className={`p-3 rounded-lg border-2 transition-all flex items-center gap-2 justify-center font-semibold ${
-                      notifyTarget === 'student'
-                        ? 'border-blue-500 bg-blue-100 text-blue-700'
-                        : 'border-gray-300 bg-white text-gray-700 hover:border-blue-300'
-                    }`}
-                  >
-                    <Users size={18} />
-                    All Students
-                  </button>
-                  <button
-                    onClick={() => setNotifyTarget('college')}
-                    className={`p-3 rounded-lg border-2 transition-all flex items-center gap-2 justify-center font-semibold ${
-                      notifyTarget === 'college'
-                        ? 'border-orange-500 bg-orange-100 text-orange-700'
-                        : 'border-gray-300 bg-white text-gray-700 hover:border-orange-300'
-                    }`}
-                  >
-                    <Building size={18} />
-                    All Colleges
-                  </button>
-                  <button
-                    onClick={() => setNotifyTarget('all')}
-                    className={`p-3 rounded-lg border-2 transition-all flex items-center gap-2 justify-center font-semibold ${
-                      notifyTarget === 'all'
-                        ? 'border-purple-500 bg-purple-100 text-purple-700'
-                        : 'border-gray-300 bg-white text-gray-700 hover:border-purple-300'
-                    }`}
-                  >
-                    <Bell size={18} />
-                    Everyone
-                  </button>
-                </div>
-              </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Create Announcement */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <GlassCard className="p-8 border-white/60 h-full" glow={false}>
+                <h2 className="text-xl font-bold text-slate-800 mb-8 flex items-center gap-3">
+                  <Send className="text-purple-600" size={24} /> New Announcement
+                </h2>
 
-              <input
-                type="text"
-                placeholder="Notification Title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-
-              <textarea
-                placeholder="Notification Message"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 h-32 resize-none"
-              />
-
-              <div className="flex gap-3">
-                <button
-                  onClick={sendNotification}
-                  disabled={loading}
-                  className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 rounded-lg font-semibold hover:from-blue-600 hover:to-blue-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="animate-spin" size={18} />
-                      Sending...
-                    </>
-                  ) : (
-                    <>
-                      <Send size={18} />
-                      Send Notification
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Notification History */}
-          <div className="card bg-white shadow-lg">
-            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <Bell size={20} /> Notification History
-            </h2>
-
-            <div className="mb-4">
-              <input
-                type="text"
-                placeholder="Search notifications..."
-                value={search}
-                onChange={handleSearch}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div className="space-y-3 max-h-96 overflow-y-auto">
-              {filtered.length > 0 ? (
-                filtered.map((notif, idx) => (
-                  <div key={idx} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-semibold text-gray-900">{notif.title}</h3>
-                      <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
-                        notif.notifyTarget === 'student' ? 'bg-blue-100 text-blue-700' :
-                        notif.notifyTarget === 'college' ? 'bg-orange-100 text-orange-700' :
-                        'bg-purple-100 text-purple-700'
-                      }`}>
-                        {notif.notifyTarget === 'student' ? '👥 Students' : notif.notifyTarget === 'college' ? '🏢 Colleges' : '📢 Everyone'}
-                      </span>
-                    </div>
-                    <p className="text-gray-600 text-sm mb-2">{notif.message}</p>
-                    <div className="flex justify-between items-center text-xs text-gray-500">
-                      <span>{new Date(notif.createdAt).toLocaleString()}</span>
-                      <span className={`px-2 py-1 rounded ${notif.status === 'sent' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                        {notif.status === 'sent' ? '✅ Sent' : '❌ Failed'}
-                      </span>
+                <form onSubmit={handleSend} className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Target Audience</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { id: 'all', label: 'Everyone', icon: Users },
+                        { id: 'student', label: 'Students', icon: User },
+                        { id: 'college', label: 'Colleges', icon: School }
+                      ].map((t) => (
+                        <button
+                          key={t.id}
+                          type="button"
+                          onClick={() => setTarget(t.id)}
+                          className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all duration-300 ${target === t.id
+                            ? 'bg-purple-50 border-purple-500 text-purple-600 shadow-lg shadow-purple-500/10'
+                            : 'bg-white border-slate-100 text-slate-400 hover:border-purple-200 hover:text-purple-400'
+                            }`}
+                        >
+                          <t.icon size={20} />
+                          <span className="text-[10px] font-bold uppercase tracking-widest">{t.label}</span>
+                        </button>
+                      ))}
                     </div>
                   </div>
-                ))
-              ) : (
-                <p className="text-center text-gray-500 py-8">No notifications sent yet</p>
-              )}
-            </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Title</label>
+                    <input
+                      required
+                      type="text"
+                      className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-slate-800 font-bold focus:outline-none focus:ring-4 focus:ring-purple-500/10 focus:border-purple-300 transition-all"
+                      placeholder="e.g. System Maintenance Update"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Message Content</label>
+                    <textarea
+                      required
+                      rows="6"
+                      className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-slate-800 font-bold focus:outline-none focus:ring-4 focus:ring-purple-500/10 focus:border-purple-300 transition-all font-bold"
+                      placeholder="Write your announcement here..."
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                    />
+                  </div>
+
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    disabled={loading}
+                    type="submit"
+                    className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-2xl shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 transition-all uppercase tracking-widest text-xs flex items-center justify-center gap-3 disabled:opacity-50"
+                  >
+                    <Send size={18} className={loading ? 'animate-pulse' : ''} />
+                    {loading ? 'Broadcasting...' : 'Dispatch Announcement'}
+                  </motion.button>
+                </form>
+              </GlassCard>
+            </motion.div>
+
+            {/* Previous Announcements */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <GlassCard className="p-8 border-white/60 h-full flex flex-col" glow={false}>
+                <h2 className="text-xl font-bold text-slate-800 mb-8 flex items-center gap-3">
+                  <History className="text-pink-600" size={24} /> Broadcast History
+                </h2>
+
+                <div className="flex-1 space-y-4 overflow-y-auto pr-2 custom-scrollbar max-h-[600px]">
+                  {notifications.length > 0 ? (
+                    notifications.map((n, idx) => (
+                      <motion.div
+                        key={n._id}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: idx * 0.05 }}
+                        className="p-5 bg-white border border-slate-100 rounded-2xl hover:shadow-lg hover:shadow-purple-500/5 transition-all group border-l-4 border-l-purple-500"
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <span className="inline-block px-2 py-0.5 bg-purple-50 text-purple-600 text-[8px] font-bold uppercase tracking-widest rounded-md mb-1">
+                              Target: {n.target}
+                            </span>
+                            <h3 className="font-bold text-slate-800 group-hover:text-purple-600 transition-colors">{n.title}</h3>
+                          </div>
+                          <button
+                            onClick={() => deleteNotification(n._id)}
+                            className="p-2 text-slate-300 hover:text-rose-500 transition-colors"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                        <p className="text-xs text-slate-500 font-medium mb-4 line-clamp-2 leading-relaxed">
+                          {n.message}
+                        </p>
+                        <div className="flex items-center gap-1.5 text-slate-400">
+                          <Clock size={12} />
+                          <span className="text-[10px] font-bold uppercase">{new Date(n.createdAt).toLocaleString()}</span>
+                        </div>
+                      </motion.div>
+                    ))
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+                      <History size={48} className="opacity-20 mb-4" />
+                      <p className="font-bold text-sm uppercase tracking-widest">No previous broadcasts</p>
+                    </div>
+                  )}
+                </div>
+              </GlassCard>
+            </motion.div>
           </div>
-        </div>
+        </main>
       </div>
     </div>
   )
