@@ -6,6 +6,9 @@ const Job = require('../models/Job');
 const Student = require('../models/Student');
 const College = require('../models/College');
 const Notification = require('../models/Notification');
+const Feedback = require('../models/Feedback');
+const AdminBroadcast = require('../models/AdminBroadcast');
+const Settings = require('../models/Settings');
 const { matchStudentsBatch, cleanSkillArray, computeMatchesForAllStudents } = require('../utils/matchingEngine');
 const { extractJobSkills } = require('../utils/skillExtractor');
 const { sendEmail } = require('../utils/sendEmail');
@@ -182,11 +185,25 @@ router.get('/dashboard', authMiddleware, async (req, res) => {
     const totalJobs = await Job.countDocuments();
     const activeJobs = await Job.countDocuments({ isActive: true });
 
+    // Additional metrics
+    const pendingColleges = await College.countDocuments({ isApproved: false });
+
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const newStudentsToday = await Student.countDocuments({ createdAt: { $gte: startOfToday } });
+
+    // Sum up all applications across all jobs
+    const jobs = await Job.find({}, 'applications');
+    const totalApplications = jobs.reduce((acc, job) => acc + (job.applications?.length || 0), 0);
+
     res.json({
       totalStudents,
       totalColleges,
       totalJobs,
-      activeJobs
+      activeJobs,
+      pendingColleges,
+      newStudentsToday,
+      totalApplications
     });
   } catch (error) {
     console.error('Get dashboard stats error:', error);
@@ -247,7 +264,6 @@ router.post('/jobs', authMiddleware, async (req, res) => {
     // Parse JD using ML API
     let parsedSkills = [];
 
-    // 1. Try ML-based parsing
     try {
       const ML_API_URL = process.env.ML_API_URL || 'http://localhost:5002';
       const jdText = description || '';
@@ -262,7 +278,7 @@ router.post('/jobs', authMiddleware, async (req, res) => {
         if (mlResponse.data.status === 'success' && mlResponse.data.jd_skill_weights) {
           // Extract skills from skill weights (keys are skills)
           parsedSkills = Object.keys(mlResponse.data.jd_skill_weights || {}).filter(Boolean);
-          console.log(`✅ Parsed ${parsedSkills.length} skills from JD (ML Service)`);
+          console.log(`✅ Parsed ${parsedSkills.length} skills from JD`);
         }
       }
     } catch (mlError) {
@@ -478,7 +494,7 @@ router.get('/colleges', authMiddleware, async (req, res) => {
       .select('-password')
       .sort({ createdAt: -1 });
 
-    const colleges = limit ? await query.limit(limit) : await colleges;
+    const colleges = limit ? await query.limit(limit) : await query;
 
     res.json(colleges);
   } catch (error) {
@@ -776,30 +792,415 @@ router.get('/students-export/csv', authMiddleware, async (req, res) => {
   }
 });
 
-// Recalculate matches for all jobs
-router.post('/jobs/recalculate-all', authMiddleware, async (req, res) => {
+// ============================================================
+// COLLEGE MANAGEMENT ROUTES
+// ============================================================
+
+/**
+ * Approve a college
+ * POST /owner/colleges/:id/approve
+ */
+router.post('/colleges/:id/approve', authMiddleware, async (req, res) => {
   try {
     if (req.userRole !== 'owner') {
       return res.status(403).json({ message: 'Access denied' });
     }
 
-    const jobs = await Job.find({});
-    console.log(`🔄 Recalculating matches for ${jobs.length} jobs...`);
-
-    let processed = 0;
-    // Process in sequence to avoid overwhelming the ML service
-    for (const job of jobs) {
-      const skills = cleanSkillArray(job.skillsRequired || job.parsedSkills || []);
-      if (skills.length > 0) {
-        // Use updateOnly=true to skip notifications
-        await matchStudentsWithJobAndNotify(job._id, skills, 75, 'student', null, true);
-      }
-      processed++;
+    const college = await College.findById(req.params.id);
+    if (!college) {
+      return res.status(404).json({ message: 'College not found' });
     }
 
-    res.json({ message: 'Recalculation completed', processed });
+    college.isApproved = true;
+    await college.save();
+
+    res.json({ message: 'College approved successfully', college });
   } catch (error) {
-    console.error('Recalculate error:', error);
+    console.error('Approve college error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+/**
+ * Reject (delete) a college
+ * POST /owner/colleges/:id/reject
+ */
+router.post('/colleges/:id/reject', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'owner') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const college = await College.findById(req.params.id);
+    if (!college) {
+      return res.status(404).json({ message: 'College not found' });
+    }
+
+    await College.findByIdAndDelete(req.params.id);
+
+    res.json({ message: 'College rejected and removed successfully' });
+  } catch (error) {
+    console.error('Reject college error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ============================================================
+// FEEDBACK ROUTES
+// ============================================================
+
+/**
+ * Get all feedback
+ * GET /owner/feedback
+ */
+router.get('/feedback', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'owner') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const feedbacks = await Feedback.find()
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.json(feedbacks);
+  } catch (error) {
+    console.error('Get feedback error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+/**
+ * Mark feedback as resolved
+ * POST /owner/feedback/:id/resolve
+ */
+router.post('/feedback/:id/resolve', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'owner') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const feedback = await Feedback.findById(req.params.id);
+    if (!feedback) {
+      return res.status(404).json({ message: 'Feedback not found' });
+    }
+
+    feedback.status = 'resolved';
+    feedback.resolvedAt = new Date();
+    feedback.resolvedBy = req.user._id;
+    await feedback.save();
+
+    res.json({ message: 'Feedback marked as resolved', feedback });
+  } catch (error) {
+    console.error('Resolve feedback error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ============================================================
+// ADMIN BROADCAST NOTIFICATIONS ROUTES
+// ============================================================
+
+/**
+ * Get all admin broadcasts
+ * GET /owner/notifications
+ */
+router.get('/notifications', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'owner') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const notifications = await AdminBroadcast.find()
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.json(notifications);
+  } catch (error) {
+    console.error('Get notifications error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+/**
+ * Create new broadcast notification
+ * POST /owner/notifications
+ */
+router.post('/notifications', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'owner') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const { title, message, target } = req.body;
+
+    if (!title || !message) {
+      return res.status(400).json({ message: 'Title and message are required' });
+    }
+
+    const broadcast = new AdminBroadcast({
+      title,
+      message,
+      target: target || 'all',
+      createdBy: req.user._id
+    });
+
+    await broadcast.save();
+
+    res.status(201).json({ message: 'Broadcast created successfully', broadcast });
+  } catch (error) {
+    console.error('Create notification error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+/**
+ * Delete a broadcast notification
+ * DELETE /owner/notifications/:id
+ */
+router.delete('/notifications/:id', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'owner') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const broadcast = await AdminBroadcast.findById(req.params.id);
+    if (!broadcast) {
+      return res.status(404).json({ message: 'Notification not found' });
+    }
+
+    await AdminBroadcast.findByIdAndDelete(req.params.id);
+
+    res.json({ message: 'Notification deleted successfully' });
+  } catch (error) {
+    console.error('Delete notification error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ============================================================
+// SETTINGS ROUTES
+// ============================================================
+
+/**
+ * Get admin settings
+ * GET /owner/settings
+ */
+router.get('/settings', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'owner') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    let settings = await Settings.findOne({ key: 'admin' });
+
+    // Create default settings if none exist
+    if (!settings) {
+      settings = await Settings.create({ key: 'admin' });
+    }
+
+    res.json(settings);
+  } catch (error) {
+    console.error('Get settings error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+/**
+ * Save admin settings
+ * POST /owner/settings
+ */
+router.post('/settings', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'owner') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const { theme, notifications, systemConfig } = req.body;
+
+    const settings = await Settings.findOneAndUpdate(
+      { key: 'admin' },
+      { theme, notifications, systemConfig },
+      { new: true, upsert: true }
+    );
+
+    res.json({ message: 'Settings saved successfully', settings });
+  } catch (error) {
+    console.error('Save settings error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ============================================================
+// REPORTS ROUTES
+// ============================================================
+
+/**
+ * Get comprehensive reports data
+ * GET /owner/reports
+ */
+router.get('/reports', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'owner') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    // Total counts
+    const totalStudents = await Student.countDocuments();
+    const placedStudents = await Student.countDocuments({ isPlaced: true });
+    const totalJobs = await Job.countDocuments();
+
+    // Top skills
+    const skillsAggregation = await Student.aggregate([
+      { $unwind: '$skills' },
+      { $match: { skills: { $exists: true, $nin: ['', null] } } },
+      {
+        $group: {
+          _id: { $toLower: '$skills' },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { count: -1 } },
+      { $limit: 5 }
+    ]);
+
+    const topSkills = skillsAggregation.map(item => ({
+      name: item._id,
+      count: item.count
+    }));
+
+    // Placement by college
+    const collegeStats = await Student.aggregate([
+      { $match: { college: { $exists: true, $ne: '' } } },
+      {
+        $group: {
+          _id: '$college',
+          total: { $sum: 1 },
+          placed: { $sum: { $cond: ['$isPlaced', 1, 0] } }
+        }
+      },
+      { $sort: { total: -1 } },
+      { $limit: 5 }
+    ]);
+
+    const placementByCollege = collegeStats.map(item => ({
+      name: item._id,
+      rate: item.total > 0 ? Math.round((item.placed / item.total) * 100) : 0
+    }));
+
+    res.json({
+      totalStudents,
+      placedStudents,
+      totalJobs,
+      topSkills,
+      placementByCollege
+    });
+  } catch (error) {
+    console.error('Get reports error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+/**
+ * Export jobs data for CSV
+ * GET /owner/reports/export/jobs
+ */
+router.get('/reports/export/jobs', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'owner') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const jobs = await Job.find()
+      .populate('postedBy', 'name')
+      .lean();
+
+    const exportData = jobs.map(job => ({
+      id: job._id.toString(),
+      title: job.title,
+      company: job.company,
+      location: job.location || 'N/A',
+      jobType: job.jobType || 'Full-time',
+      skillsRequired: (job.skillsRequired || []).join('; '),
+      applicationsCount: (job.applications || []).length,
+      isActive: job.isActive ? 'Yes' : 'No',
+      postedBy: job.postedBy?.name || 'Admin',
+      createdAt: new Date(job.createdAt).toLocaleDateString()
+    }));
+
+    res.json(exportData);
+  } catch (error) {
+    console.error('Export jobs error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+/**
+ * Export students data for CSV
+ * GET /owner/reports/export/students
+ */
+router.get('/reports/export/students', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'owner') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const students = await Student.find()
+      .select('-password')
+      .lean();
+
+    const exportData = students.map(student => ({
+      id: student._id.toString(),
+      name: student.name,
+      email: student.email,
+      college: student.college || 'N/A',
+      graduationYear: student.graduationYear || 'N/A',
+      skills: (student.skills || []).join('; '),
+      status: student.isPlaced ? 'Placed' : 'Unplaced',
+      placedCompany: student.placedCompany || 'N/A',
+      isBlocked: student.isBlocked ? 'Yes' : 'No',
+      createdAt: new Date(student.createdAt).toLocaleDateString()
+    }));
+
+    res.json(exportData);
+  } catch (error) {
+    console.error('Export students error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ============================================================
+// JOB PATCH ROUTE (for toggle status)
+// ============================================================
+
+/**
+ * Patch/Update job (toggle active status)
+ * PATCH /owner/jobs/:jobId
+ */
+router.patch('/jobs/:jobId', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'owner') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const job = await Job.findById(req.params.jobId);
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found' });
+    }
+
+    // Update only provided fields
+    const allowedFields = ['isActive', 'title', 'company', 'description', 'location', 'jobType'];
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) {
+        job[field] = req.body[field];
+      }
+    }
+
+    await job.save();
+
+    res.json(job);
+  } catch (error) {
+    console.error('Patch job error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

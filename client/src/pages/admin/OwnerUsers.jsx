@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import API from '../../api/axios'
@@ -82,7 +83,7 @@ export default function OwnerUsers() {
   }
 
   const handleBlockStatusChange = (updatedStudent) => {
-    const updatedStudents = students.map(s => 
+    const updatedStudents = students.map(s =>
       s._id === updatedStudent._id ? updatedStudent : s
     )
     setStudents(updatedStudents)
@@ -150,86 +151,85 @@ export default function OwnerUsers() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex flex-col">
+    <div className="min-h-screen bg-slate-50">
       <Navbar />
-
-      <div className="flex flex-1">
+      <div className="flex pt-16 h-screen overflow-hidden">
         <OwnerSidebar />
 
-        <div className="flex-1 p-8 space-y-8 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
           {/* Header */}
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="text-4xl font-black bg-gradient-to-r from-purple-400 via-pink-400 to-red-400 bg-clip-text text-transparent mb-2">
-              👥 User Management
+          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
+            <h1 className="text-4xl font-bold text-slate-900">
+              User Management
             </h1>
-            <p className="text-gray-300">Monitor, manage, and control all registered students in the platform</p>
+            <p className="text-gray-500 font-medium">Monitor and manage all registered students in the platform</p>
           </motion.div>
 
           {/* Stats Grid */}
           {stats ? (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ staggerChildren: 0.1 }}
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4"
             >
-              <GlassCard glow delay={0}>
+              <GlassCard className="h-full p-6 border-white/50" glow={false} delay={0}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-semibold text-gray-300 mb-1">Total Students</p>
-                    <p className="text-3xl font-black text-transparent bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text">
-                      {stats.total}
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Total Students</p>
+                    <p className="text-3xl font-black text-indigo-600">
+                      {stats.total.toLocaleString()}
                     </p>
                   </div>
-                  <Users className="text-blue-400 opacity-50" size={40} />
+                  <Users className="text-indigo-400 opacity-50" size={40} />
                 </div>
               </GlassCard>
 
-              <GlassCard glow delay={0.1}>
+              <GlassCard className="h-full p-6 border-white/50" glow={false} delay={0.1}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-semibold text-gray-300 mb-1">Placed Students</p>
-                    <p className="text-3xl font-black text-transparent bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text">
-                      {stats.placed}
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Placed Students</p>
+                    <p className="text-3xl font-black text-emerald-600">
+                      {stats.placed.toLocaleString()}
                     </p>
                   </div>
-                  <TrendingUp className="text-green-400 opacity-50" size={40} />
+                  <TrendingUp className="text-emerald-400 opacity-50" size={40} />
                 </div>
               </GlassCard>
 
-              <GlassCard glow delay={0.2}>
+              <GlassCard className="h-full p-6 border-white/50" glow={false} delay={0.2}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-semibold text-gray-300 mb-1">Unplaced</p>
-                    <p className="text-3xl font-black text-transparent bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text">
-                      {stats.unplaced}
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Unplaced</p>
+                    <p className="text-3xl font-black text-amber-600">
+                      {stats.unplaced.toLocaleString()}
                     </p>
                   </div>
-                  <Award className="text-yellow-400 opacity-50" size={40} />
+                  <Award className="text-amber-400 opacity-50" size={40} />
                 </div>
               </GlassCard>
 
-              <GlassCard glow delay={0.3}>
+              <GlassCard className="h-full p-6 border-white/50" glow={false} delay={0.3}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-semibold text-gray-300 mb-1">Active</p>
-                    <p className="text-3xl font-black text-transparent bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text">
-                      {stats.active}
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Active</p>
+                    <p className="text-3xl font-black text-purple-600">
+                      {stats.active.toLocaleString()}
                     </p>
                   </div>
                   <Unlock className="text-purple-400 opacity-50" size={40} />
                 </div>
               </GlassCard>
 
-              <GlassCard glow delay={0.4}>
+              <GlassCard className="h-full p-6 border-white/50" glow={false} delay={0.4}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-semibold text-gray-300 mb-1">Blocked</p>
-                    <p className="text-3xl font-black text-transparent bg-gradient-to-r from-red-400 to-rose-400 bg-clip-text">
-                      {stats.blocked}
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Blocked</p>
+                    <p className="text-3xl font-bold text-rose-600">
+                      {stats.blocked.toLocaleString()}
                     </p>
                   </div>
-                  <Lock className="text-red-400 opacity-50" size={40} />
+                  <Lock className="text-rose-400 opacity-50" size={40} />
                 </div>
               </GlassCard>
             </motion.div>
@@ -242,7 +242,7 @@ export default function OwnerUsers() {
           )}
 
           {/* Search & Filter Bar */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="flex flex-col lg:flex-row gap-4 items-center justify-between"
@@ -254,7 +254,7 @@ export default function OwnerUsers() {
                 value={search}
                 onChange={handleSearch}
                 placeholder="Search by name or email..."
-                className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 backdrop-blur-lg"
+                className="w-full pl-12 pr-4 py-3 bg-white border border-slate-100 rounded-2xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-purple-500/10 focus:border-purple-300 transition-all shadow-sm font-medium"
               />
             </div>
 
@@ -265,13 +265,12 @@ export default function OwnerUsers() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => handleFilterChange(f)}
-                  className={`px-5 py-2.5 rounded-lg font-semibold text-sm transition-all ${
-                    filter === f
-                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/50'
-                      : 'bg-white/10 text-gray-300 hover:bg-white/20 border border-white/20'
-                  }`}
+                  className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${filter === f
+                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/30'
+                    : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-100'
+                    }`}
                 >
-                  {f.charAt(0).toUpperCase() + f.slice(1)}
+                  {f}
                 </motion.button>
               ))}
             </div>
@@ -280,7 +279,7 @@ export default function OwnerUsers() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleExportCSV}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:shadow-lg shadow-blue-500/50 transition-all"
+              className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:shadow-lg shadow-purple-500/20 transition-all"
             >
               <DownloadCloud size={20} />
               Export CSV
@@ -291,18 +290,18 @@ export default function OwnerUsers() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl overflow-hidden"
+            className="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-xl"
           >
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-gradient-to-r from-purple-600/50 to-pink-600/50 border-b border-white/20">
+                <thead className="bg-gradient-to-r from-purple-600/5 to-pink-600/5 border-b border-slate-100">
                   <tr>
-                    <th className="px-6 py-4 text-left font-bold text-white">Name</th>
-                    <th className="px-6 py-4 text-left font-bold text-white">Email</th>
-                    <th className="px-6 py-4 text-left font-bold text-white">College</th>
-                    <th className="px-6 py-4 text-left font-bold text-white">Skills</th>
-                    <th className="px-6 py-4 text-left font-bold text-white">Status</th>
-                    <th className="px-6 py-4 text-right font-bold text-white">Actions</th>
+                    <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Name</th>
+                    <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Email</th>
+                    <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">College</th>
+                    <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Skills</th>
+                    <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</th>
+                    <th className="px-6 py-4 text-right text-[10px] font-bold text-slate-400 uppercase tracking-widest">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -321,29 +320,29 @@ export default function OwnerUsers() {
                         initial={{ opacity: 0, x: -20 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         transition={{ delay: idx * 0.05 }}
-                        className="border-b border-white/10 hover:bg-white/5 transition-all"
+                        className="border-b border-gray-50 hover:bg-gray-50/50 transition-all"
                       >
                         <td className="px-6 py-4">
-                          <p className="font-bold text-white">{student.name}</p>
+                          <p className="font-bold text-gray-900">{student.name}</p>
                         </td>
                         <td className="px-6 py-4">
-                          <p className="text-gray-300 text-sm">{student.email}</p>
+                          <p className="text-gray-600 text-sm">{student.email}</p>
                         </td>
                         <td className="px-6 py-4">
-                          <p className="text-gray-300">{student.college || '—'}</p>
+                          <p className="text-gray-600 font-medium">{student.college || '—'}</p>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex flex-wrap gap-1">
                             {student.skills?.slice(0, 2).map((skill, sidx) => (
                               <span
                                 key={sidx}
-                                className="px-2 py-1 bg-gradient-to-r from-blue-500/30 to-cyan-500/30 text-blue-200 text-xs rounded-lg border border-blue-400/30"
+                                className="px-2 py-1 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-lg border border-indigo-100"
                               >
                                 {skill}
                               </span>
                             ))}
                             {student.skills?.length > 2 && (
-                              <span className="px-2 py-1 bg-white/10 text-gray-300 text-xs rounded-lg">
+                              <span className="px-2 py-1 bg-gray-100 text-gray-500 text-xs font-bold rounded-lg">
                                 +{student.skills.length - 2}
                               </span>
                             )}
@@ -354,8 +353,8 @@ export default function OwnerUsers() {
                             {student.isBlocked && (
                               <AnimatedBadge text="🔒 Blocked" variant="missing" />
                             )}
-                            <AnimatedBadge 
-                              text={student.isPlaced ? '✓ Placed' : '○ Unplaced'} 
+                            <AnimatedBadge
+                              text={student.isPlaced ? '✓ Placed' : '○ Unplaced'}
                               variant={student.isPlaced ? 'skill' : 'status'}
                             />
                           </div>
@@ -365,10 +364,10 @@ export default function OwnerUsers() {
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => handleViewDetails(student)}
-                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:shadow-lg hover:shadow-purple-500/50 transition-all inline-flex"
+                            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold hover:shadow-lg hover:shadow-purple-500/20 transition-all inline-flex uppercase text-[10px] tracking-widest"
                           >
                             <Eye size={16} />
-                            Know More
+                            View Profile
                           </motion.button>
                         </td>
                       </motion.tr>
@@ -386,7 +385,7 @@ export default function OwnerUsers() {
           </motion.div>
 
           {/* Colleges Section */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
@@ -394,10 +393,10 @@ export default function OwnerUsers() {
           >
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
               <div>
-                <h2 className="text-3xl font-black bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent mb-1">
-                  🎓 Partner Colleges
+                <h2 className="text-2xl font-bold text-slate-800 mb-1">
+                  Participating Colleges
                 </h2>
-                <p className="text-gray-300">Connected educational institutions</p>
+                <p className="text-slate-400 font-medium text-[10px] uppercase tracking-widest">Connected educational institutions</p>
               </div>
               <div className="relative w-full lg:w-1/3">
                 <Search className="absolute left-4 top-3.5 text-gray-400" size={20} />
@@ -406,33 +405,33 @@ export default function OwnerUsers() {
                   value={collegeSearch}
                   onChange={handleCollegeSearch}
                   placeholder="Search colleges..."
-                  className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 backdrop-blur-lg"
+                  className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-sm"
                 />
               </div>
             </div>
 
             {collegeStats && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <GlassCard glow delay={0}>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <GlassCard className="p-6 border-white/50" glow={false} delay={0}>
                   <div>
-                    <p className="text-xs font-semibold text-gray-300 mb-2">Total Colleges</p>
-                    <p className="text-3xl font-black text-transparent bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text">
-                      {collegeStats.total}
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Total Colleges</p>
+                    <p className="text-3xl font-black text-indigo-600">
+                      {collegeStats.total.toLocaleString()}
                     </p>
                   </div>
                 </GlassCard>
-                <GlassCard glow delay={0.1}>
+                <GlassCard className="p-6 border-white/50" glow={false} delay={0.1}>
                   <div>
-                    <p className="text-xs font-semibold text-gray-300 mb-2">Active Colleges</p>
-                    <p className="text-3xl font-black text-transparent bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text">
-                      {collegeStats.active}
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Active Colleges</p>
+                    <p className="text-3xl font-black text-emerald-600">
+                      {collegeStats.active.toLocaleString()}
                     </p>
                   </div>
                 </GlassCard>
-                <GlassCard glow delay={0.2}>
+                <GlassCard className="p-6 border-white/50" glow={false} delay={0.2}>
                   <div>
-                    <p className="text-xs font-semibold text-gray-300 mb-2">Inactive</p>
-                    <p className="text-3xl font-black text-transparent bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text">
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Inactive</p>
+                    <p className="text-3xl font-black text-amber-600">
                       {collegeStats.total - collegeStats.active}
                     </p>
                   </div>
@@ -440,15 +439,15 @@ export default function OwnerUsers() {
               </div>
             )}
 
-            <div className="bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl overflow-hidden">
+            <div className="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-xl">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="bg-gradient-to-r from-cyan-600/50 to-blue-600/50 border-b border-white/20">
+                  <thead className="bg-gradient-to-r from-purple-600/5 to-pink-600/5 border-b border-slate-100">
                     <tr>
-                      <th className="px-6 py-4 text-left font-bold text-white">Name</th>
-                      <th className="px-6 py-4 text-left font-bold text-white">Email</th>
-                      <th className="px-6 py-4 text-left font-bold text-white">Location</th>
-                      <th className="px-6 py-4 text-left font-bold text-white">Website</th>
+                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Name</th>
+                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Email</th>
+                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Location</th>
+                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Website</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -459,16 +458,16 @@ export default function OwnerUsers() {
                           initial={{ opacity: 0, x: -20 }}
                           whileInView={{ opacity: 1, x: 0 }}
                           transition={{ delay: idx * 0.05 }}
-                          className="border-b border-white/10 hover:bg-white/5 transition-all"
+                          className="border-b border-gray-50 hover:bg-gray-50/50 transition-all"
                         >
                           <td className="px-6 py-4">
-                            <p className="font-bold text-white">{college.name}</p>
+                            <p className="font-bold text-gray-900">{college.name}</p>
                           </td>
                           <td className="px-6 py-4">
-                            <p className="text-gray-300">{college.email}</p>
+                            <p className="text-gray-600">{college.email}</p>
                           </td>
                           <td className="px-6 py-4">
-                            <p className="text-gray-400">{college.location || '—'}</p>
+                            <p className="text-gray-500">{college.location || '—'}</p>
                           </td>
                           <td className="px-6 py-4">
                             {college.website ? (
@@ -476,12 +475,12 @@ export default function OwnerUsers() {
                                 href={college.website}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-cyan-400 hover:text-cyan-300 hover:underline"
+                                className="text-indigo-600 font-bold hover:text-indigo-800 hover:underline transition-colors"
                               >
                                 Visit Website
                               </a>
                             ) : (
-                              <span className="text-gray-500">—</span>
+                              <span className="text-gray-400">—</span>
                             )}
                           </td>
                         </motion.tr>
@@ -498,16 +497,15 @@ export default function OwnerUsers() {
               </div>
             </div>
           </motion.div>
-        </div>
-      </div>
+        </main>
 
-      {/* Student Details Modal */}
-      <StudentDetailsModal
-        student={selectedStudent}
-        isOpen={detailsModalOpen}
-        onClose={() => setDetailsModalOpen(false)}
-        onBlockStatusChange={handleBlockStatusChange}
-      />
+        <StudentDetailsModal
+          student={selectedStudent}
+          isOpen={detailsModalOpen}
+          onClose={() => setDetailsModalOpen(false)}
+          onBlockStatusChange={handleBlockStatusChange}
+        />
+      </div>
     </div>
   )
 }
