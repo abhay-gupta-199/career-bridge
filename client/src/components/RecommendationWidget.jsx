@@ -13,7 +13,7 @@ const RecommendationWidget = () => {
     const fetchRecommendations = async () => {
       try {
         const data = await getRecommendations()
-        setRecommendations((data.recommendations || []).slice(0, 3))
+        setRecommendations((data.recommendations || []).filter(rec => rec.matchPercentage > 80).slice(0, 3))
         setSummary(data.summary)
       } catch (error) {
         console.error('Error fetching recommendations widget:', error)
@@ -121,15 +121,14 @@ const RecommendationWidget = () => {
                 <h4 className="font-semibold text-gray-900 text-sm">{job.title}</h4>
                 <p className="text-xs text-gray-600">{job.company}</p>
               </div>
-              <div className={`px-2 py-1 rounded-full text-xs font-bold ${
-                job.matchPercentage >= 80
+              <div className={`px-2 py-1 rounded-full text-xs font-bold ${job.matchPercentage >= 80
                   ? 'bg-green-100 text-green-700'
                   : job.matchPercentage >= 60
-                  ? 'bg-blue-100 text-blue-700'
-                  : job.matchPercentage >= 50
-                  ? 'bg-yellow-100 text-yellow-700'
-                  : 'bg-orange-100 text-orange-700'
-              }`}>
+                    ? 'bg-blue-100 text-blue-700'
+                    : job.matchPercentage >= 50
+                      ? 'bg-yellow-100 text-yellow-700'
+                      : 'bg-orange-100 text-orange-700'
+                }`}>
                 {job.matchPercentage}%
               </div>
             </div>

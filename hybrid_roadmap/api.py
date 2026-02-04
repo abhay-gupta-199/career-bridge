@@ -118,12 +118,11 @@ def match_jd_resume():
 
 @app.route("/match-skills", methods=["POST"])
 def match_skills():
-    """
-    Match student skills with JD skills directly (no file upload needed)
-    Expects JSON: { "resume_skills": [...], "jd_skills": [...] }
-    """
+    print("Request received in match-skills")
     try:
         data = request.get_json()
+        print(f"Data received: {data}")
+
         
         if not data:
             return jsonify({"error": "JSON data required"}), 400
@@ -196,6 +195,7 @@ def full_process_route():
 
 
 if __name__ == "__main__":
-    port = int(os.environ.get('PORT', 5004))
-    app.run(debug=True, host='0.0.0.0', port=port)
+    port = int(os.environ.get('PORT', 5002))
+    print(f"Starting server on port {port}")
+    app.run(debug=False, host='0.0.0.0', port=port, threaded=True)
 

@@ -7,6 +7,7 @@ import { Briefcase, MapPin, Users, TrendingUp, Search, X } from 'lucide-react'
 import GradientCard from '../../components/ui/GradientCard'
 import AnimatedBadge from '../../components/ui/AnimatedBadge'
 import SkeletonLoader from '../../components/ui/SkeletonLoader'
+import JobCard from '../../components/JobCardEnhanced'
 
 const JobsStudent = () => {
   const [jobs, setJobs] = useState([])
@@ -148,113 +149,31 @@ const JobsStudent = () => {
               <p className="text-gray-500 mt-2">Try adjusting your search or filters</p>
             </motion.div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredJobs.map((job, idx) => {
                 const matchPercent = job.studentMatch?.matchPercentage ?? 0
                 const isApplied = appliedJobs.has(job._id)
 
                 return (
-                  <GradientCard
+                  <motion.div
                     key={job._id}
-                    gradient="from-emerald-500 via-teal-500 to-green-500"
-                    delay={idx * 0.1}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.1 }}
                   >
-                    {/* Top Section */}
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <h3 className="text-xl font-bold text-gray-900 mb-1">
-                          {job.title}
-                        </h3>
-                        <div className="flex items-center gap-2 text-gray-600 text-sm mb-3">
-                          <span className="font-semibold text-emerald-600">{job.company}</span>
-                          {job.location && (
-                            <>
-                              <span>•</span>
-                              <span className="flex items-center gap-1">
-                                <MapPin size={16} />
-                                {job.location}
-                              </span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Match Score */}
-                      <motion.div
-                        whileHover={{ scale: 1.1 }}
-                        className="text-center bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-3 min-w-[80px] shadow-sm border border-emerald-100"
-                      >
-                        <div className="text-2xl font-bold text-emerald-600">
-                          {matchPercent}%
-                        </div>
-                        <div className="text-[10px] uppercase tracking-wider font-bold text-emerald-800/60">Match</div>
-                      </motion.div>
-                    </div>
-
-                    {/* Description */}
-                    <p className="text-gray-600 text-sm line-clamp-2 mb-4 leading-relaxed">
-                      {job.description}
-                    </p>
-
-                    {/* Skills Section */}
-                    {(job.studentMatch?.matched_skills?.length > 0 ||
-                      job.studentMatch?.missing_skills?.length > 0) && (
-                        <div className="mb-4 bg-gray-50/50 p-3 rounded-xl border border-gray-100">
-                          <div className="flex flex-wrap gap-2">
-                            {job.studentMatch?.matched_skills?.slice(0, 3).map((skill, idx) => (
-                              <AnimatedBadge
-                                key={`matched-${idx}`}
-                                text={skill}
-                                variant="skill"
-                                icon="✓"
-                              />
-                            ))}
-                            {job.studentMatch?.missing_skills?.slice(0, 2).map((skill, idx) => (
-                              <AnimatedBadge
-                                key={`missing-${idx}`}
-                                text={skill}
-                                variant="missing"
-                                icon="⊘"
-                              />
-                            ))}
-                            {(job.studentMatch?.matched_skills?.length ?? 0) > 3 && (
-                              <AnimatedBadge
-                                text={`+${(job.studentMatch?.matched_skills?.length ?? 0) - 3}`}
-                                variant="tag"
-                              />
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                    {/* Bottom Section */}
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => setSelectedJob(job)}
-                        className="px-4 py-2 text-sm font-semibold text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors flex items-center gap-2"
-                      >
-                        View Details
-                      </motion.button>
-
-                      <motion.button
-                        whileHover={!isApplied ? { scale: 1.05 } : {}}
-                        whileTap={!isApplied ? { scale: 0.95 } : {}}
-                        onClick={() => handleApply(job._id)}
-                        disabled={isApplied}
-                        className={`
-                          px-6 py-2.5 rounded-xl font-bold text-sm transition-all shadow-md
-                          ${isApplied
-                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
-                            : 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:shadow-lg hover:shadow-emerald-200'
-                          }
-                        `}
-                      >
-                        {isApplied ? 'Applied' : 'Apply Now'}
-                      </motion.button>
-                    </div>
-                  </GradientCard>
+                    <JobCard
+                      job={{
+                        ...job,
+                        semanticPercentage: job.studentMatch?.semanticPercentage || 0,
+                        tfidfPercentage: job.studentMatch?.tfidfPercentage || 0
+                      }}
+                      matchPercentage={matchPercent}
+                      matchedSkills={job.studentMatch?.matched_skills || []}
+                      missingSkills={job.studentMatch?.missing_skills || []}
+                      onClick={() => setSelectedJob(job)}
+                      onViewDetails={() => setSelectedJob(job)}
+                    />
+                  </motion.div>
                 )
               })}
             </div>

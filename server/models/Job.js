@@ -100,6 +100,9 @@ const jobSchema = new mongoose.Schema({
     matchedSkills: [{ type: String }],
     missingSkills: [{ type: String }],
     method: { type: String },
+    semanticScore: { type: Number },
+    tfidfScore: { type: Number },
+    hybridScore: { type: Number },
     calculatedAt: { type: Date, default: Date.now }
   }]
 }, {

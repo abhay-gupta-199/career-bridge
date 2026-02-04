@@ -7,6 +7,7 @@ const Student = require('../models/Student');
 const College = require('../models/College');
 const Notification = require('../models/Notification');
 const { matchStudentsBatch, cleanSkillArray, computeMatchesForAllStudents } = require('../utils/matchingEngine');
+const { extractJobSkills } = require('../utils/skillExtractor');
 const { sendEmail } = require('../utils/sendEmail');
 
 const router = express.Router();
@@ -15,7 +16,7 @@ const router = express.Router();
  * Enhanced Job Matching with Notifications
  * Matches all students against a new JD and sends notifications based on notifyTarget
  */
-const matchStudentsWithJobAndNotify = async (jobId, jdSkills, threshold = 75, notifyTarget = 'student', collegeId = null) => {
+const matchStudentsWithJobAndNotify = async (jobId, jdSkills, threshold = 75, notifyTarget = 'student', collegeId = null, updateOnly = false) => {
   try {
     const job = await Job.findById(jobId).populate('postedBy', 'name company');
     if (!job) {
@@ -54,6 +55,9 @@ const matchStudentsWithJobAndNotify = async (jobId, jdSkills, threshold = 75, no
         matchedSkills: Array.isArray(m.matchedSkills) ? m.matchedSkills : [],
         missingSkills: Array.isArray(m.missingSkills) ? m.missingSkills : [],
         method: m.method || 'unknown',
+        semanticScore: m.semanticScore || 0,
+        tfidfScore: m.tfidfScore || 0,
+        hybridScore: m.hybridScore || 0,
         calculatedAt: new Date()
       }));
 
@@ -64,10 +68,22 @@ const matchStudentsWithJobAndNotify = async (jobId, jdSkills, threshold = 75, no
       // continue without failing the entire matching process
     }
 
+    // If updateOnly is true, skip notifications
+    if (updateOnly) {
+      console.log('ℹ️ Update only mode - skipping notifications');
+      return {
+        matched: allMatches.length,
+        notified: 0,
+        errors: [],
+        details: []
+      };
+    }
+
     // Filter out students to notify based on threshold and valid contact info
-    const notifyList = allMatches.filter(m =>
-      m && typeof m.matchPercentage === 'number' && m.matchPercentage >= threshold && m.studentId && m.studentEmail
-    );
+    const notifyList = allMatches.filter(m => {
+      const effectivePercentage = m.hybridScore ? Math.round(m.hybridScore * 100) : m.matchPercentage;
+      return effectivePercentage >= threshold && m.studentId && m.studentEmail;
+    });
 
     console.log(`✅ ${notifyList.length} students meet the >=${threshold}% threshold for ${notifyTarget}`);
 
@@ -76,13 +92,15 @@ const matchStudentsWithJobAndNotify = async (jobId, jdSkills, threshold = 75, no
     const emailPromises = [];
 
     for (const match of notifyList) {
+      const effectivePercentage = match.hybridScore ? Math.round(match.hybridScore * 100) : match.matchPercentage;
+
       try {
         const notification = new Notification({
           student: match.studentId,
           college: notifyTarget === 'college' ? collegeId : null,
           job: jobId,
-          message: `New job opportunity: ${job.title} at ${job.company} - ${match.matchPercentage}% skill match!`,
-          matchPercentage: match.matchPercentage,
+          message: `New job opportunity: ${job.title} at ${job.company} - ${effectivePercentage}% skill match!`,
+          matchPercentage: effectivePercentage,
           matchedSkills: match.matchedSkills,
           unmatchedSkills: match.missingSkills,
           matchMethod: match.method,
@@ -128,7 +146,7 @@ const matchStudentsWithJobAndNotify = async (jobId, jdSkills, threshold = 75, no
     return {
       matched: allMatches.length,
       notified: notifications.length,
-      errors: [] ,
+      errors: [],
       details: notifyList.map(m => ({ studentId: m.studentId, name: m.studentName, matchPercentage: m.matchPercentage }))
     };
   } catch (error) {
@@ -228,34 +246,54 @@ router.post('/jobs', authMiddleware, async (req, res) => {
 
     // Parse JD using ML API
     let parsedSkills = [];
-    
+
+    // 1. Try ML-based parsing
     try {
       const ML_API_URL = process.env.ML_API_URL || 'http://localhost:5002';
       const jdText = description || '';
-      
+
       if (jdText) {
         const mlResponse = await axios.post(`${ML_API_URL}/parse-jd`, {
           jd_text: jdText
         }, {
-          timeout: 15000
+          timeout: 4000 // Short timeout for ML service
         });
-        
+
         if (mlResponse.data.status === 'success' && mlResponse.data.jd_skill_weights) {
-            // Extract skills from skill weights (keys are skills)
-            parsedSkills = Object.keys(mlResponse.data.jd_skill_weights || {}).filter(Boolean);
-            console.log(`✅ Parsed ${parsedSkills.length} skills from JD`);
-          }
+          // Extract skills from skill weights (keys are skills)
+          parsedSkills = Object.keys(mlResponse.data.jd_skill_weights || {}).filter(Boolean);
+          console.log(`✅ Parsed ${parsedSkills.length} skills from JD (ML Service)`);
+        }
       }
     } catch (mlError) {
-      console.error('⚠️ ML API Error (JD parsing):', mlError.message);
-      // Continue with manual skills if ML parsing fails
+      console.warn('⚠️ ML API Error (JD parsing):', mlError.message);
+      // Continue with manual/local skills if ML parsing fails
+    }
+
+    // 2. Use Local Regex-based parsing (Robust Fallback/Augmentation)
+    try {
+      console.log('🔍 Running local skill extraction...');
+      const localExtraction = extractJobSkills({
+        title,
+        description,
+        requirements: description, // Use description as requirements if not provided separately
+        skillsRequired: []
+      });
+
+      if (localExtraction && localExtraction.extractedSkills.length > 0) {
+        console.log(`✅ Parsed ${localExtraction.extractedSkills.length} skills locally`);
+        // Merge local skills with existing parsed skills
+        parsedSkills = [...parsedSkills, ...localExtraction.extractedSkills];
+      }
+    } catch (localError) {
+      console.error('⚠️ Local skill extraction error:', localError.message);
     }
 
     // Combine manual skills and parsed skills
-    const manualSkills = skillsRequired ? 
+    const manualSkills = skillsRequired ?
       skillsRequired.split(',').map(skill => skill && String(skill).trim()).filter(s => s) : [];
 
-    // Clean and normalize all skills to avoid undefined values
+    // Clean and normalize all skills to avoid duplicates and undefined values
     const allSkills = cleanSkillArray([...manualSkills, ...parsedSkills]);
 
     console.log(`📌 Total skills required: ${allSkills.length}`);
@@ -291,7 +329,7 @@ router.post('/jobs', authMiddleware, async (req, res) => {
 
     if (matchResult && matchResult.timedOut) {
       // Matching is still running — return immediate response and indicate background processing
-      res.status(201).json({ 
+      res.status(201).json({
         message: 'Job created successfully',
         job: {
           id: job._id,
@@ -313,7 +351,7 @@ router.post('/jobs', authMiddleware, async (req, res) => {
     } else {
       // Matching finished within timeout — return real counts
       const result = matchResult || { matched: 0, notified: 0, errors: [] };
-      res.status(201).json({ 
+      res.status(201).json({
         message: 'Job created and matching completed',
         job: {
           id: job._id,
@@ -396,7 +434,7 @@ router.delete('/jobs/:jobId', authMiddleware, async (req, res) => {
     }
 
     await Job.findByIdAndDelete(req.params.jobId);
-    
+
     // Also delete associated notifications
     await Notification.deleteMany({ job: req.params.jobId });
 
@@ -734,6 +772,34 @@ router.get('/students-export/csv', authMiddleware, async (req, res) => {
     res.send(csvContent);
   } catch (error) {
     console.error('CSV export error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Recalculate matches for all jobs
+router.post('/jobs/recalculate-all', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'owner') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const jobs = await Job.find({});
+    console.log(`🔄 Recalculating matches for ${jobs.length} jobs...`);
+
+    let processed = 0;
+    // Process in sequence to avoid overwhelming the ML service
+    for (const job of jobs) {
+      const skills = cleanSkillArray(job.skillsRequired || job.parsedSkills || []);
+      if (skills.length > 0) {
+        // Use updateOnly=true to skip notifications
+        await matchStudentsWithJobAndNotify(job._id, skills, 75, 'student', null, true);
+      }
+      processed++;
+    }
+
+    res.json({ message: 'Recalculation completed', processed });
+  } catch (error) {
+    console.error('Recalculate error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

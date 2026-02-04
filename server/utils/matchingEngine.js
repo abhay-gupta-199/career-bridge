@@ -29,7 +29,7 @@ const cleanSkill = (skill) => {
  */
 const cleanSkillArray = (skills) => {
   if (!Array.isArray(skills)) return [];
-  
+
   return [
     ...new Set(
       skills
@@ -152,9 +152,10 @@ const performSimpleMatching = (resumeSkills, jdSkills) => {
  * - match_percentage: simple skill intersection percentage
  */
 const performMLMatching = async (resumeSkills, jdSkills) => {
-  const ML_API_URL = process.env.ML_API_URL || 'http://localhost:5002';
+  const ML_API_URL = process.env.ML_API_URL || 'http://127.0.0.1:5002';
 
   try {
+    console.log(`Sending ML request to ${ML_API_URL}/match-skills...`);
     const response = await axios.post(
       `${ML_API_URL}/match-skills`,
       {
@@ -162,13 +163,13 @@ const performMLMatching = async (resumeSkills, jdSkills) => {
         jd_skills: jdSkills
       },
       {
-        timeout: 15000 // 15 second timeout for ML service
+        timeout: 300000 // 5 minutes timeout for ML service
       }
     );
 
     if (response.data.status === 'success' && response.data.match_result) {
       const result = response.data.match_result;
-      
+
       return {
         status: 'success',
         method: 'ml-semantic',
@@ -380,5 +381,5 @@ module.exports = {
   performMLMatching,
   matchAllStudentsWithJD,
   matchStudentsBatch
-  ,computeMatchesForAllStudents
+  , computeMatchesForAllStudents
 };

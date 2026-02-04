@@ -13,6 +13,8 @@ const studentRoutes = require('./routes/studentRoutes');
 const collegeRoutes = require('./routes/collegeRoutes');
 const ownerRoutes = require('./routes/ownerRoutes');
 const roadmapRoutes = require('./routes/roadmapRoutes');
+const skillExtractionRoutes = require('./routes/skillExtractionRoutes');
+const hybridMatchingRoutes = require('./routes/hybridMatchingRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5003;
@@ -78,6 +80,10 @@ app.use('/api/college', collegeRoutes);
 app.use('/api/owner', ownerRoutes);
 // Lightweight roadmap generator endpoint (demo)
 app.use('/api', roadmapRoutes);
+// Skill extraction routes
+app.use('/api/skills', skillExtractionRoutes);
+// Hybrid matching routes
+app.use('/api/hybrid', hybridMatchingRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

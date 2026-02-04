@@ -38,8 +38,8 @@ const AnimatedBadge = ({
       whileHover={animate ? "hover" : ""}
       whileTap={props.onClick ? { scale: 0.95 } : {}}
       className={`
-        inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold
-        shadow-md backdrop-blur-sm ${variants[variant]}
+        inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold
+        shadow-sm backdrop-blur-sm ${variants[variant]}
         ${props.onClick ? 'cursor-pointer' : 'cursor-default'} transition-all duration-300
         ${className}
       `}

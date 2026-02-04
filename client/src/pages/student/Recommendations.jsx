@@ -26,7 +26,7 @@ const StudentRecommendations = () => {
       setError(null)
       const data = await getRecommendations()
 
-      setRecommendations(data.recommendations || [])
+      setRecommendations((data.recommendations || []).filter(rec => rec.matchPercentage > 80))
       setSummary(data.summary)
     } catch (err) {
       setError(

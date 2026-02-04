@@ -31,7 +31,7 @@ import StudentApplications from './pages/student/Applications'
 import StudentRecommendations from './pages/student/Recommendations'
 import StudentRoadmaps from './pages/student/StudentRoadmaps'
 import StudentNotifications from './pages/student/Notifications'
-import StudentRoadmap from './pages/student/StudentRoadmap'
+import RoadmapGenerator from './pages/student/RoadmapGenerator'
 
 
 // 🔐 Route Protection
@@ -67,7 +67,7 @@ function App() {
               path="/student/custom-roadmap"
               element={
                 <ProtectedRoute role="student">
-                  <StudentRoadmap />
+                  <RoadmapGenerator />
                 </ProtectedRoute>
               }
             />
