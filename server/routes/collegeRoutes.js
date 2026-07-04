@@ -340,8 +340,12 @@ router.post('/jobs', authMiddleware, async (req, res) => {
     }
 
     // Combine manual skills and parsed skills
-    const manualSkills = skillsRequired ? 
-      skillsRequired.split(',').map(skill => skill && String(skill).trim()).filter(s => s) : [];
+    let manualSkills = [];
+    if (Array.isArray(skillsRequired)) {
+      manualSkills = skillsRequired.map(skill => skill && String(skill).trim()).filter(s => s);
+    } else if (skillsRequired) {
+      manualSkills = String(skillsRequired).split(',').map(skill => skill && String(skill).trim()).filter(s => s);
+    }
 
     const allSkills = cleanSkillArray([...manualSkills, ...parsedSkills]);
 
@@ -477,6 +481,74 @@ router.put('/jobs/:jobId/applications/:appIndex', authMiddleware, async (req, re
     }
   } catch (error) {
     console.error('Update application status error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Schedule OA or Interview for an applicant (college side)
+router.put('/jobs/:jobId/applications/:appIndex/schedule', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'college') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const { event, date, note } = req.body;
+    const allowedEvents = ['oa', 'interview'];
+    if (!allowedEvents.includes(event)) {
+      return res.status(400).json({ message: 'Invalid event type' });
+    }
+
+    if (!date) {
+      return res.status(400).json({ message: 'Schedule date is required' });
+    }
+
+    const scheduledAt = new Date(date);
+    if (Number.isNaN(scheduledAt.getTime())) {
+      return res.status(400).json({ message: 'Invalid schedule date' });
+    }
+
+    const job = await Job.findById(req.params.jobId);
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found' });
+    }
+
+    if (job.postedByCollege.toString() !== req.user._id.toString() || job.createdByType !== 'college') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const appIndex = parseInt(req.params.appIndex);
+    if (appIndex < 0 || appIndex >= job.applications.length) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+
+    const application = job.applications[appIndex];
+    if (application.status === 'Rejected') {
+      return res.status(400).json({ message: 'Cannot schedule events for rejected applications' });
+    }
+
+    if (event === 'oa') {
+      if (!['Shortlisted', 'OA Scheduled', 'Interview Scheduled', 'Accepted'].includes(application.status)) {
+        return res.status(400).json({ message: 'OA can only be scheduled after shortlisting' });
+      }
+      application.oaSchedule = {
+        date: scheduledAt,
+        scheduledBy: 'college',
+        note: note || ''
+      };
+      application.status = 'OA Scheduled';
+    } else {
+      application.interviewSchedule = {
+        date: scheduledAt,
+        scheduledBy: 'college',
+        note: note || ''
+      };
+      application.status = 'Interview Scheduled';
+    }
+
+    await job.save();
+    return res.json({ message: `${event === 'oa' ? 'OA' : 'Interview'} scheduled successfully`, application });
+  } catch (error) {
+    console.error('Schedule application event error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

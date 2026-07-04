@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: career-bridge-server
+    env: node
+    rootDirectory: server
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: ML_SERVICE_URL
+        value: "https://career-bridge-ml.onrender.com"
+      - key: CLIENT_ORIGIN
+        sync: false
+
+  - type: web
+    name: career-bridge-ml
+    env: python
+    rootDirectory: hybrid_roadmap
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn api:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.0
+      - key: GEMINI_API_KEY
+        sync: false

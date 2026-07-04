@@ -1,0 +1,212 @@
+import re
+import PyPDF2
+from docx import Document
+
+SKILLS_SECTION_HEADERS = [
+    'technical skills',
+    'technical skill',
+    'skills & technologies',
+    'skills and technologies',
+    'skills',
+    'tech stack',
+    'skills summary',
+    'technical proficiency',
+    'technical expertise',
+    'expertise',
+    'core competencies',
+    'competencies',
+    'tools',
+    'technologies',
+    'technology stack'
+]
+
+SECTION_TERMINATORS = [
+    'experience',
+    'education',
+    'projects',
+    'certifications',
+    'achievements',
+    'summary',
+    'objective',
+    'interests',
+    'languages',
+    'contact',
+    'professional experience',
+    'work experience',
+    'volunteer experience'
+]
+
+
+def _extract_text_from_docx(path: str) -> str:
+    doc = Document(path)
+    return ' '.join(p.text for p in doc.paragraphs)
+
+
+def _extract_text_from_pdf(path: str) -> str:
+    text = ''
+    with open(path, 'rb') as f:
+        reader = PyPDF2.PdfReader(f)
+        for page in reader.pages:
+            text += page.extract_text() or ''
+    return text
+
+
+def _clean_skill_token(token: str) -> str:
+    token = re.sub(r'[\u2022\*\-\•]+', ' ', token).strip()
+    token = re.sub(r'[\(\)\[\]"\']', '', token)
+    token = re.sub(r'\b(?:and|with|skills|skill|experience|knowledge|proficient|familiar|strong|working|expert|expertise|ability|abilities|of|in|the|for|on|not|finding|it|also)\b', ' ', token, flags=re.IGNORECASE)
+    token = re.sub(r'[,;:\|\/]+', ' ', token)
+    token = re.sub(r'\s{2,}', ' ', token).strip()
+    return token.strip(' .,-–—')
+
+
+def _split_skill_candidates(section_text: str) -> list[str]:
+    lines = [line.strip() for line in re.split(r'[\r\n]+', section_text) if line.strip()]
+    candidates = []
+    for line in lines:
+        if re.match(r'^[\-\u2022\*\•]+\s*', line):
+            line = re.sub(r'^[\-\u2022\*\•]+\s*', '', line)
+        if re.search(r'[;,\|/]', line):
+            parts = re.split(r'[;,
+|/]+', line)
+        else:
+            parts = [line]
+        for part in parts:
+            part = part.strip()
+            if part:
+                candidates.append(part)
+    return candidates
+
+
+def _split_whitespace_skill_candidates(candidate: str) -> list[str]:
+    words = [token for token in candidate.split() if token]
+    if not words:
+        return []
+
+    if len(words) <= 4:
+        return [' '.join(words)]
+
+    phrases = []
+    for i in range(len(words)):
+        if len(words[i]) > 1:
+            phrases.append(words[i])
+        if i < len(words) - 1:
+            two_word = f'{words[i]} {words[i + 1]}'
+            if len(two_word) <= 40:
+                phrases.append(two_word)
+    return phrases
+
+
+def _extract_dynamic_skills(section_text: str) -> list[str]:
+    candidates = _split_skill_candidates(section_text)
+    skills = []
+
+    for candidate in candidates:
+        cleaned = _clean_skill_token(candidate)
+        if not cleaned:
+            continue
+
+        if re.search(r'\b(and|or|etc|etc\.)\b', cleaned, flags=re.IGNORECASE):
+            cleaned = re.sub(r'\b(and|or|etc|etc\.)\b', ',', cleaned, flags=re.IGNORECASE)
+            more_parts = [part.strip() for part in cleaned.split(',') if part.strip()]
+            for part in more_parts:
+                part_clean = _clean_skill_token(part)
+                if len(part_clean) > 1:
+                    skills.append(part_clean)
+            continue
+
+        if ' ' in cleaned and not re.search(r'[,:;/|]', candidate):
+            whitespace_parts = _split_whitespace_skill_candidates(cleaned)
+            if whitespace_parts:
+                skills.extend(whitespace_parts)
+                continue
+
+        if len(cleaned) > 1:
+            skills.append(cleaned)
+
+    return skills
+
+
+def _extract_context_skills(text: str) -> list[str]:
+    patterns = [
+        r'(?:experience with|proficiency in|knowledge of|familiarity with|working knowledge of|hands-on experience with|strong experience in|solid experience with|skilled in|expert in)([\s\S]{0,200})',
+        r'(?:tools[:]?|technologies[:]?|software[:]?|frameworks[:]?)([\s\S]{0,200})',
+        r'(?:competencies[:]?|skills[:]?)([\s\S]{0,200})'
+    ]
+    segments = []
+    for pattern in patterns:
+        for match in re.finditer(pattern, text, flags=re.IGNORECASE):
+            segment = match.group(1)
+            if segment:
+                segment = re.split(r'(?<=\.|;|\n|\r)', segment)[0]
+                segments.append(segment)
+
+    skills = []
+    for segment in segments:
+        parts = re.split(r'[;,\|/]+', segment)
+        for part in parts:
+            cleaned = _clean_skill_token(part)
+            if len(cleaned) > 1:
+                skills.append(cleaned)
+    return skills
+
+
+def _find_skills_section(text: str) -> str | None:
+    lines = [line.strip() for line in re.split(r'[\r\n]+', text) if line.strip()]
+    normalized = [re.sub(r'\s+', ' ', line.lower()) for line in lines]
+
+    start = None
+    for idx, line in enumerate(normalized):
+        if any(header in line for header in SKILLS_SECTION_HEADERS):
+            start = idx
+            break
+
+    if start is None:
+        return None
+
+    section_lines = []
+    if ':' in lines[start]:
+        after_header = lines[start].split(':', 1)[1].strip()
+        if after_header:
+            section_lines.append(after_header)
+
+    for line in lines[start + 1:]:
+        lower_line = line.lower()
+        if not lower_line.strip():
+            break
+        if any(term in lower_line for term in SECTION_TERMINATORS):
+            break
+        section_lines.append(line)
+
+    return '\n'.join(section_lines).strip() if section_lines else None
+
+
+def parse_resume(file_path: str, skills_csv_path: str) -> list[str]:
+    if file_path.lower().endswith('.pdf'):
+        text = _extract_text_from_pdf(file_path)
+    elif file_path.lower().endswith('.docx'):
+        text = _extract_text_from_docx(file_path)
+    else:
+        raise ValueError('Unsupported resume format. Use .pdf or .docx')
+
+    skills = []
+    section_text = _find_skills_section(text)
+    if section_text:
+        skills = _extract_dynamic_skills(section_text)
+
+    if not skills:
+        skills = _extract_context_skills(text)
+
+    if not skills:
+        # Fallback: try to pull out terms from any lines that look like skill lists
+        raw_lines = [line.strip() for line in re.split(r'[\r\n]+', text) if line.strip()]
+        fallback_candidates = []
+        for line in raw_lines:
+            if any(sep in line for sep in [',', ';', '|', '/']) and len(line) < 120:
+                fallback_candidates.extend(re.split(r'[;,\|/]+', line))
+        for candidate in fallback_candidates:
+            cleaned = _clean_skill_token(candidate)
+            if len(cleaned) > 1:
+                skills.append(cleaned)
+
+    return sorted({skill.strip() for skill in skills if len(skill.strip()) > 1})

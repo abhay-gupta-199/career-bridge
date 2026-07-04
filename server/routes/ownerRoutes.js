@@ -9,7 +9,7 @@ const Notification = require('../models/Notification');
 const Feedback = require('../models/Feedback');
 const AdminBroadcast = require('../models/AdminBroadcast');
 const Settings = require('../models/Settings');
-const { matchStudentsBatch, cleanSkillArray, computeMatchesForAllStudents } = require('../utils/matchingEngine');
+const { matchStudentsBatch, matchStudentWithJD, cleanSkillArray, computeMatchesForAllStudents } = require('../utils/matchingEngine');
 const { extractJobSkills } = require('../utils/skillExtractor');
 const { sendEmail } = require('../utils/sendEmail');
 
@@ -232,6 +232,158 @@ router.get('/jobs', authMiddleware, async (req, res) => {
   }
 });
 
+// Get applications for a specific job (admin/owner)
+router.get('/jobs/applications/:jobId', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'owner') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const job = await Job.findById(req.params.jobId)
+      .populate('applications.student', 'name email college skills resume');
+
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found' });
+    }
+
+    const jobSkills = [
+      ...new Set([
+        ...(job.skillsRequired || []),
+        ...(job.parsedSkills || [])
+      ].map(s => String(s).trim()).filter(Boolean))
+    ];
+
+    const applicationsWithScore = await Promise.all(
+      job.applications.map(async (app) => {
+        const studentSkills = app.student?.skills || [];
+        const matchResult = await matchStudentWithJD(studentSkills, jobSkills);
+
+        return {
+          ...app.toObject(),
+          student: app.student,
+          match: {
+            matchPercentage: matchResult.match_percentage || 0,
+            method: matchResult.method || 'simple',
+            hybridScore: matchResult.hybrid_score,
+            semanticScore: matchResult.semantic_score,
+            tfidfScore: matchResult.tfidf_score,
+            matchedSkills: matchResult.matched_skills || [],
+            missingSkills: matchResult.missing_skills || []
+          }
+        };
+      })
+    );
+
+    res.json({
+      jobId: job._id,
+      jobTitle: job.title,
+      company: job.company,
+      totalApplications: job.applications.length,
+      jobSkills,
+      applications: applicationsWithScore
+    });
+  } catch (error) {
+    console.error('Get owner job applications error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Update application status for a job (admin/owner)
+router.put('/jobs/:jobId/applications/:appIndex', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'owner') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const { status } = req.body;
+    const allowedStatuses = ['Applied', 'Under Review', 'Shortlisted', 'OA Scheduled', 'Interview Scheduled', 'Accepted', 'Rejected'];
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({ message: 'Invalid status' });
+    }
+
+    const job = await Job.findById(req.params.jobId);
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found' });
+    }
+
+    const appIndex = parseInt(req.params.appIndex, 10);
+    if (appIndex >= 0 && appIndex < job.applications.length) {
+      job.applications[appIndex].status = status;
+      await job.save();
+      return res.json({ message: `Application status updated to ${status}` });
+    }
+
+    res.status(404).json({ message: 'Application not found' });
+  } catch (error) {
+    console.error('Update owner application status error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Schedule OA or Interview for an applicant (admin/owner)
+router.put('/jobs/:jobId/applications/:appIndex/schedule', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'owner') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const { event, date, note } = req.body;
+    const allowedEvents = ['oa', 'interview'];
+    if (!allowedEvents.includes(event)) {
+      return res.status(400).json({ message: 'Invalid event type' });
+    }
+
+    if (!date) {
+      return res.status(400).json({ message: 'Schedule date is required' });
+    }
+
+    const scheduledAt = new Date(date);
+    if (Number.isNaN(scheduledAt.getTime())) {
+      return res.status(400).json({ message: 'Invalid schedule date' });
+    }
+
+    const job = await Job.findById(req.params.jobId);
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found' });
+    }
+
+    const appIndex = parseInt(req.params.appIndex, 10);
+    if (appIndex < 0 || appIndex >= job.applications.length) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+
+    const application = job.applications[appIndex];
+    if (application.status === 'Rejected') {
+      return res.status(400).json({ message: 'Cannot schedule events for rejected applications' });
+    }
+
+    if (event === 'oa') {
+      if (!['Shortlisted', 'OA Scheduled', 'Interview Scheduled', 'Accepted'].includes(application.status)) {
+        return res.status(400).json({ message: 'OA can only be scheduled after shortlisting' });
+      }
+      application.oaSchedule = {
+        date: scheduledAt,
+        scheduledBy: 'owner',
+        note: note || ''
+      };
+      application.status = 'OA Scheduled';
+    } else {
+      application.interviewSchedule = {
+        date: scheduledAt,
+        scheduledBy: 'owner',
+        note: note || ''
+      };
+      application.status = 'Interview Scheduled';
+    }
+
+    await job.save();
+    return res.json({ message: `${event === 'oa' ? 'OA' : 'Interview'} scheduled successfully`, application });
+  } catch (error) {
+    console.error('Schedule application event error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 /**
  * Create new job with JD parsing and automatic student matching
  * POST /api/owner/jobs
@@ -306,8 +458,12 @@ router.post('/jobs', authMiddleware, async (req, res) => {
     }
 
     // Combine manual skills and parsed skills
-    const manualSkills = skillsRequired ?
-      skillsRequired.split(',').map(skill => skill && String(skill).trim()).filter(s => s) : [];
+    let manualSkills = [];
+    if (Array.isArray(skillsRequired)) {
+      manualSkills = skillsRequired.map(skill => skill && String(skill).trim()).filter(s => s);
+    } else if (skillsRequired) {
+      manualSkills = String(skillsRequired).split(',').map(skill => skill && String(skill).trim()).filter(s => s);
+    }
 
     // Clean and normalize all skills to avoid duplicates and undefined values
     const allSkills = cleanSkillArray([...manualSkills, ...parsedSkills]);

@@ -31,7 +31,7 @@ const StudentRoadmapsPage = () => {
   useEffect(() => {
     const fetchStudentSkills = async () => {
       try {
-        const response = await API.get('/api/student/profile');
+        const response = await API.get('/student/profile');
         if (response.data.data.skills) {
           setStudentSkills(response.data.data.skills);
         }
@@ -48,7 +48,7 @@ const StudentRoadmapsPage = () => {
     const fetchJobs = async () => {
       try {
         setLoading(true);
-        const response = await API.get('/api/student/jobs');
+        const response = await API.get('/student/jobs');
         const fetchedJobs = response.data.data || [];
 
         // Parse skills for jobs that don't have parsed skills
@@ -102,7 +102,7 @@ const StudentRoadmapsPage = () => {
 
     for (const job of jobsToMatch) {
       try {
-        const matchResponse = await API.post('/api/skills/calculate-match', {
+        const matchResponse = await API.post('/skills/calculate-match', {
           resumeSkills: studentSkills,
           jobSkills: job.parsedSkills || job.skillsRequired || []
         });

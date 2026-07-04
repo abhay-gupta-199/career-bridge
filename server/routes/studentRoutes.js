@@ -9,7 +9,8 @@ const Student = require('../models/Student')
 const Job = require('../models/Job')
 const Notification = require('../models/Notification')
 // Add imports at top
-const pdf = require('pdf-parse')
+const pdfParse = require('pdf-parse')
+const pdf = pdfParse.default || pdfParse
 const mammoth = require('mammoth')
 const { matchStudentWithJD, cleanSkillArray } = require('../utils/matchingEngine')
 const { extractResumeSkills, extractJobSkills } = require('../utils/skillExtractor')
@@ -113,9 +114,15 @@ router.post('/upload-resume', authMiddleware, upload.single('resume'), async (re
       console.error('❌ Local parsing error:', localError.message)
     }
 
-    // 3. Merge Skills (Dedup)
-    const combinedSkills = [...new Set([...parsedSkills, ...localSkills])]
-      .filter(s => s && typeof s === 'string' && s.length > 1) // basic filtering
+    // 3. Use only ML skills if successful, else fallback. Do not merge them together.
+    let combinedSkills = []
+    if (parsedSkills.length > 0) {
+      combinedSkills = parsedSkills
+    } else {
+      combinedSkills = localSkills
+    }
+    
+    combinedSkills = [...new Set(combinedSkills)].filter(s => s && typeof s === 'string' && s.length > 1) // basic filtering
 
     console.log(`✨ Total Unique Skills: ${combinedSkills.length}`)
 
@@ -128,11 +135,8 @@ router.post('/upload-resume', authMiddleware, upload.single('resume'), async (re
     // Save resume path
     student.resume = `uploads/${fileName}`
 
-    // Merge new skills with existing student skills
-    const existingSkills = student.skills || []
-    // Add unique new skills
-    const finalSkills = [...new Set([...existingSkills, ...combinedSkills])]
-    student.skills = finalSkills
+    // Overwrite existing student skills with freshly parsed skills to prevent junk accumulation
+    student.skills = combinedSkills
 
     await student.save()
 
@@ -443,7 +447,9 @@ router.get('/applications', authMiddleware, async (req, res) => {
           jobType: job.jobType
         },
         status: app ? app.status : 'Unknown',
-        appliedAt: app ? app.appliedAt : null
+        appliedAt: app ? app.appliedAt : null,
+        oaSchedule: app ? app.oaSchedule || null : null,
+        interviewSchedule: app ? app.interviewSchedule || null : null
       }
     })
 
@@ -451,6 +457,74 @@ router.get('/applications', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Get applications error:', error)
     res.status(500).json({ message: 'Server error: ' + error.message })
+  }
+})
+
+// ========================
+// ✅ Student can schedule OA or Interview for their own application
+// ========================
+router.put('/applications/:jobId/schedule', authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== 'student') {
+      return res.status(403).json({ message: 'Access denied' })
+    }
+
+    const { event, date, note } = req.body
+    const allowedEvents = ['oa', 'interview']
+    if (!allowedEvents.includes(event)) {
+      return res.status(400).json({ message: 'Invalid event type' })
+    }
+
+    if (!date) {
+      return res.status(400).json({ message: 'Schedule date is required' })
+    }
+
+    const scheduledAt = new Date(date)
+    if (Number.isNaN(scheduledAt.getTime())) {
+      return res.status(400).json({ message: 'Invalid schedule date' })
+    }
+
+    const job = await Job.findById(req.params.jobId)
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found' })
+    }
+
+    const studentId = req.user._id.toString()
+    const appIndex = job.applications.findIndex(a => a.student.toString() === studentId)
+    if (appIndex === -1) {
+      return res.status(404).json({ message: 'Application not found' })
+    }
+
+    const application = job.applications[appIndex]
+    if (application.status === 'Rejected') {
+      return res.status(400).json({ message: 'Cannot schedule events for rejected applications' })
+    }
+
+    if (event === 'oa') {
+      application.oaSchedule = {
+        date: scheduledAt,
+        scheduledBy: 'student',
+        note: note || ''
+      }
+      if (!['OA Scheduled', 'Interview Scheduled', 'Accepted'].includes(application.status)) {
+        application.status = 'OA Scheduled'
+      }
+    } else {
+      application.interviewSchedule = {
+        date: scheduledAt,
+        scheduledBy: 'student',
+        note: note || ''
+      }
+      if (!['Interview Scheduled', 'Accepted'].includes(application.status)) {
+        application.status = 'Interview Scheduled'
+      }
+    }
+
+    await job.save()
+    return res.json({ message: `${event === 'oa' ? 'OA' : 'Interview'} scheduled successfully`, application })
+  } catch (error) {
+    console.error('Student schedule application event error:', error)
+    res.status(500).json({ message: 'Server error' })
   }
 })
 

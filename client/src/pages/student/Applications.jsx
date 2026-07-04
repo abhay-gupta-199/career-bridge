@@ -33,9 +33,35 @@ const Applications = () => {
     }
   }
 
+  const scheduleApplicationEvent = async (jobId, event) => {
+    const eventLabel = event === 'oa' ? 'OA' : 'Interview'
+    const inputValue = window.prompt(`Enter ${eventLabel} date/time (YYYY-MM-DDTHH:MM)`)
+    if (!inputValue) return
+
+    const scheduledAt = new Date(inputValue)
+    if (Number.isNaN(scheduledAt.getTime())) {
+      alert('Invalid date/time format. Please use YYYY-MM-DDTHH:MM')
+      return
+    }
+
+    try {
+      await API.put(`/student/applications/${jobId}/schedule`, {
+        event,
+        date: scheduledAt.toISOString()
+      })
+      await fetchApplications()
+      alert(`${eventLabel} scheduled successfully`)
+    } catch (err) {
+      console.error('Error scheduling application event:', err)
+      alert('Unable to schedule the event. Please try again.')
+    }
+  }
+
   const getStatusIcon = (status) => {
     switch (status) {
       case 'Shortlisted':
+      case 'OA Scheduled':
+      case 'Interview Scheduled':
         return <CheckCircle className="w-5 h-5 text-green-500" />
       case 'Rejected':
         return <XCircle className="w-5 h-5 text-red-500" />
@@ -48,6 +74,8 @@ const Applications = () => {
   const getStatusBadgeStyle = (status) => {
     switch (status) {
       case 'Shortlisted':
+      case 'OA Scheduled':
+      case 'Interview Scheduled':
         return 'bg-green-50 text-green-700 border border-green-200'
       case 'Rejected':
         return 'bg-red-50 text-red-700 border border-red-200'
@@ -60,6 +88,8 @@ const Applications = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'Shortlisted':
+      case 'OA Scheduled':
+      case 'Interview Scheduled':
         return 'bg-gradient-to-r from-green-100 to-emerald-100'
       case 'Rejected':
         return 'bg-gradient-to-r from-red-100 to-pink-100'
@@ -74,6 +104,8 @@ const Applications = () => {
     if (filter === 'all') return true
     if (filter === 'applied') return app.status === 'Applied'
     if (filter === 'shortlisted') return app.status === 'Shortlisted'
+    if (filter === 'oa') return app.status === 'OA Scheduled'
+    if (filter === 'interview') return app.status === 'Interview Scheduled'
     if (filter === 'rejected') return app.status === 'Rejected'
     return true
   })
@@ -162,6 +194,8 @@ const Applications = () => {
               { key: 'all', label: 'All Applications' },
               { key: 'applied', label: 'Applied' },
               { key: 'shortlisted', label: 'Shortlisted' },
+              { key: 'oa', label: 'OA Scheduled' },
+              { key: 'interview', label: 'Interview Scheduled' },
               { key: 'rejected', label: 'Rejected' }
             ].map((btn) => (
               <button
@@ -244,6 +278,22 @@ const Applications = () => {
                                 {new Date(app.appliedAt).toLocaleDateString()}
                               </div>
                             </div>
+                            {(app.oaSchedule || app.interviewSchedule) && (
+                              <div className="space-y-2 text-sm text-slate-600">
+                                {app.oaSchedule?.date && (
+                                  <div className="rounded-2xl bg-emerald-50 border border-emerald-100 p-3">
+                                    <p className="font-semibold text-slate-800">OA Scheduled</p>
+                                    <p>{new Date(app.oaSchedule.date).toLocaleString()}</p>
+                                  </div>
+                                )}
+                                {app.interviewSchedule?.date && (
+                                  <div className="rounded-2xl bg-emerald-50 border border-emerald-100 p-3">
+                                    <p className="font-semibold text-slate-800">Interview Scheduled</p>
+                                    <p>{new Date(app.interviewSchedule.date).toLocaleString()}</p>
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -285,11 +335,19 @@ const ApplicationDetailsModal = ({ isOpen, onClose, application }) => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Shortlisted': return 'bg-green-100 text-green-700'
-      case 'Rejected': return 'bg-red-100 text-red-700'
-      default: return 'bg-blue-100 text-blue-700'
+      case 'Shortlisted':
+      case 'OA Scheduled':
+      case 'Interview Scheduled':
+        return 'bg-green-100 text-green-700'
+      case 'Rejected':
+        return 'bg-red-100 text-red-700'
+      default:
+        return 'bg-blue-100 text-blue-700'
     }
   }
+
+  const canScheduleOA = application.status !== 'Rejected' && !application.oaSchedule?.date
+  const canScheduleInterview = application.status !== 'Rejected' && !application.interviewSchedule?.date
 
   return (
     <motion.div
@@ -350,9 +408,46 @@ const ApplicationDetailsModal = ({ isOpen, onClose, application }) => {
                 <p className="text-gray-900 font-medium">{application.job.jobType}</p>
               </div>
             </div>
+
+            {(application.oaSchedule?.date || application.interviewSchedule?.date) && (
+              <div className="space-y-3">
+                {application.oaSchedule?.date && (
+                  <div className="rounded-2xl bg-emerald-50 border border-emerald-100 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">OA Schedule</p>
+                    <p className="text-sm text-slate-800 mt-1">{new Date(application.oaSchedule.date).toLocaleString()}</p>
+                    <p className="text-xs text-slate-500 mt-1">Scheduled by {application.oaSchedule.scheduledBy}</p>
+                  </div>
+                )}
+                {application.interviewSchedule?.date && (
+                  <div className="rounded-2xl bg-emerald-50 border border-emerald-100 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">Interview Schedule</p>
+                    <p className="text-sm text-slate-800 mt-1">{new Date(application.interviewSchedule.date).toLocaleString()}</p>
+                    <p className="text-xs text-slate-500 mt-1">Scheduled by {application.interviewSchedule.scheduledBy}</p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
-          <div className="mt-8 pt-6 border-t border-gray-100 flex justify-end">
+          <div className="mt-8 pt-6 border-t border-gray-100 flex flex-col sm:flex-row sm:justify-between gap-3">
+            <div className="flex flex-wrap gap-3">
+              {canScheduleOA && (
+                <button
+                  onClick={() => scheduleApplicationEvent(application.job.id, 'oa')}
+                  className="px-6 py-2.5 bg-cyan-600 text-white font-semibold rounded-xl hover:bg-cyan-700 transition-colors"
+                >
+                  Schedule OA
+                </button>
+              )}
+              {canScheduleInterview && (
+                <button
+                  onClick={() => scheduleApplicationEvent(application.job.id, 'interview')}
+                  className="px-6 py-2.5 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors"
+                >
+                  Schedule Interview
+                </button>
+              )}
+            </div>
             <button
               onClick={onClose}
               className="px-6 py-2.5 bg-gray-900 text-white font-semibold rounded-xl hover:bg-gray-800 transition-colors"

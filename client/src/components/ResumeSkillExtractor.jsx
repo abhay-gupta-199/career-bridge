@@ -47,7 +47,7 @@ const ResumeSkillExtractor = ({ onSkillsExtracted }) => {
       setError(null);
       setSuccess(false);
 
-      const response = await API.post('/api/skills/extract-resume-skills', {
+      const response = await API.post('/skills/extract-resume-skills', {
         resumeText
       });
 
@@ -61,7 +61,7 @@ const ResumeSkillExtractor = ({ onSkillsExtracted }) => {
       }
 
       // Auto-save to profile
-      await API.put('/api/student/profile', {
+      await API.put('/student/profile', {
         skills: data.extractedSkills
       });
     } catch (err) {

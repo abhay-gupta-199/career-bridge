@@ -21,3 +21,4 @@ flask-cors
 
 # Environment Variables
 python-dotenv
+gunicorn

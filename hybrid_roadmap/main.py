@@ -21,8 +21,9 @@ def ats_skill_pipeline(resume_path: str, jd_text: str, skills_csv_path: str) -> 
     jd_skills_with_weights = parse_jd(jd_text, skills_csv_path)
 
     jd_skills = list(jd_skills_with_weights.keys())
-    matched = [s for s in jd_skills if s in resume_skills]
-    missing = [s for s in jd_skills if s not in resume_skills]
+    resume_set = set(s.lower() for s in resume_skills)
+    matched = [s for s in jd_skills if s.lower() in resume_set]
+    missing = [s for s in jd_skills if s.lower() not in resume_set]
 
     # 📊 Calculate ATS score
     total_weight = sum(jd_skills_with_weights.values()) or 1

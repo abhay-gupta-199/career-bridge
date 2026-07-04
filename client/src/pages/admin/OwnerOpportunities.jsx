@@ -17,6 +17,10 @@ import {
   PowerOff,
   Filter,
   Users,
+  Mail,
+  CheckCircle,
+  XCircle,
+  ArrowUpRight,
   Calendar,
   ChevronRight,
   TrendingUp,
@@ -30,6 +34,9 @@ export default function OwnerOpportunities() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('all')
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [selectedJob, setSelectedJob] = useState(null)
+  const [applications, setApplications] = useState([])
+  const [showApplications, setShowApplications] = useState(false)
   const [newJob, setNewJob] = useState({
     title: '',
     company: '',
@@ -123,6 +130,53 @@ export default function OwnerOpportunities() {
       fetchJobs()
     } catch (err) {
       alert('Error creating job')
+    }
+  }
+
+  const fetchApplications = async (jobId) => {
+    try {
+      const res = await API.get(`/owner/jobs/applications/${jobId}`)
+      setApplications(res.data.applications)
+      setShowApplications(true)
+    } catch (err) {
+      alert('Error fetching applications')
+    }
+  }
+
+  const updateApplicationStatus = async (jobId, appIndex, newStatus) => {
+    try {
+      await API.put(`/owner/jobs/${jobId}/applications/${appIndex}`, {
+        status: newStatus
+      })
+      fetchApplications(jobId)
+      fetchJobs()
+    } catch (err) {
+      alert('Error updating application status')
+    }
+  }
+
+  const scheduleApplicationEvent = async (jobId, appIndex, event) => {
+    const eventLabel = event === 'oa' ? 'OA' : 'Interview'
+    const inputValue = window.prompt(`Enter ${eventLabel} date/time (YYYY-MM-DDTHH:MM)`)
+    if (!inputValue) return
+
+    const scheduledAt = new Date(inputValue)
+    if (Number.isNaN(scheduledAt.getTime())) {
+      alert('Invalid date/time format. Please use YYYY-MM-DDTHH:MM')
+      return
+    }
+
+    try {
+      await API.put(`/owner/jobs/${jobId}/applications/${appIndex}/schedule`, {
+        event,
+        date: scheduledAt.toISOString()
+      })
+      fetchApplications(jobId)
+      fetchJobs()
+      alert(`${eventLabel} scheduled successfully`)
+    } catch (err) {
+      console.error('Error scheduling application event:', err)
+      alert('Unable to schedule the event. Please try again.')
     }
   }
 
@@ -306,14 +360,27 @@ export default function OwnerOpportunities() {
                           )}
                         </div>
 
-                        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                          <div className="flex items-center gap-2 text-slate-500">
-                            <MapPin size={14} className="text-purple-600" />
-                            <span className="text-[10px] font-bold">{job.location}</span>
+                        <div className="flex items-center justify-between gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-2xl bg-slate-100 grid place-items-center text-purple-600">
+                              <Users size={18} />
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold text-slate-900">{job.applications?.length || 0}</p>
+                              <p className="text-[9px] uppercase tracking-widest text-slate-400">Applied</p>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-1 text-[10px] font-bold text-purple-600">
-                            {job.jobType}
-                          </div>
+
+                          <button
+                            onClick={() => {
+                              setSelectedJob(job)
+                              fetchApplications(job._id)
+                            }}
+                            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-purple-700 transition-all"
+                          >
+                            <ArrowUpRight size={14} />
+                            View Applicants
+                          </button>
                         </div>
                       </div>
                     </GlassCard>
@@ -326,6 +393,146 @@ export default function OwnerOpportunities() {
 
         {/* Create Job Modal */}
         <AnimatePresence>
+          {showApplications && selectedJob && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowApplications(false)}
+                className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+              />
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                className="relative w-full max-w-3xl bg-white rounded-[2rem] shadow-2xl overflow-hidden border border-white"
+              >
+                <div className="p-8 bg-gradient-to-br from-purple-600 to-pink-600 text-white flex items-start justify-between gap-4">
+                  <div>
+                    <h2 className="text-2xl font-bold">Applicants for {selectedJob.title}</h2>
+                    <p className="text-purple-100 font-medium opacity-80 text-sm mt-1">{selectedJob.company} • {applications.length} applications</p>
+                  </div>
+                  <button
+                    onClick={() => setShowApplications(false)}
+                    className="px-4 py-3 bg-white/10 rounded-2xl text-white font-bold hover:bg-white/20 transition"
+                  >
+                    Close
+                  </button>
+                </div>
+
+                <div className="p-8 max-h-[80vh] overflow-y-auto space-y-6 custom-scrollbar">
+                  {applications.length === 0 ? (
+                    <div className="text-center py-20">
+                      <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <Users size={32} className="text-slate-200" />
+                      </div>
+                      <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">No applications yet</p>
+                    </div>
+                  ) : (
+                    applications.map((app, idx) => (
+                      <div key={idx} className="p-6 bg-slate-50 rounded-3xl border border-slate-100 space-y-4">
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-4">
+                            <div className="w-14 h-14 rounded-3xl bg-gradient-to-br from-purple-100 to-pink-100 grid place-items-center text-purple-600 text-xl font-black">
+                              {app.student?.name?.charAt(0) || 'S'}
+                            </div>
+                            <div>
+                              <p className="font-bold text-slate-900">{app.student?.name || 'Unknown Student'}</p>
+                              <p className="text-xs text-slate-500 flex items-center gap-2">
+                                <Mail size={12} /> {app.student?.email || 'No email'}
+                              </p>
+                              <p className="text-xs text-slate-400 uppercase tracking-widest mt-1">{app.student?.college || 'College not listed'}</p>
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-end gap-2">
+                            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${app.status === 'Accepted' || app.status === 'Shortlisted' ? 'bg-emerald-100 text-emerald-700' : app.status === 'Rejected' ? 'bg-pink-100 text-pink-700' : 'bg-amber-100 text-amber-700'}`}>
+                              {app.status}
+                            </span>
+                            <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-[10px] font-black uppercase tracking-widest">
+                              {app.match?.matchPercentage ?? 0}% Match
+                            </span>
+                            {app.match?.hybridScore != null && (
+                              <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-500 text-[10px] font-black uppercase tracking-widest">
+                                Hybrid {Math.round(app.match.hybridScore * 100)}%
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2">
+                          {app.student?.skills?.slice(0, 5).map((skill, skillIdx) => (
+                            <span key={skillIdx} className="px-3 py-1 text-[10px] font-black uppercase text-slate-500 bg-white border border-slate-200 rounded-full">
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+
+                        {(app.oaSchedule?.date || app.interviewSchedule?.date) && (
+                          <div className="space-y-2 mt-3 text-xs text-slate-600">
+                            {app.oaSchedule?.date && (
+                              <div className="rounded-2xl bg-emerald-50 border border-emerald-100 p-3">
+                                <p className="font-semibold text-slate-800">OA Scheduled</p>
+                                <p>{new Date(app.oaSchedule.date).toLocaleString()}</p>
+                              </div>
+                            )}
+                            {app.interviewSchedule?.date && (
+                              <div className="rounded-2xl bg-emerald-50 border border-emerald-100 p-3">
+                                <p className="font-semibold text-slate-800">Interview Scheduled</p>
+                                <p>{new Date(app.interviewSchedule.date).toLocaleString()}</p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        <div className="grid gap-3 md:grid-cols-3">
+                          {app.status !== 'Shortlisted' && app.status !== 'Accepted' && app.status !== 'Rejected' && (
+                            <button
+                              onClick={() => updateApplicationStatus(selectedJob._id, idx, 'Shortlisted')}
+                              className="flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600 text-white rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-emerald-700 transition"
+                            >
+                              <CheckCircle size={16} /> Shortlist
+                            </button>
+                          )}
+                          {(app.status === 'Shortlisted' || app.status === 'OA Scheduled' || app.status === 'Interview Scheduled') && (
+                            <button
+                              onClick={() => scheduleApplicationEvent(selectedJob._id, idx, 'oa')}
+                              className="flex items-center justify-center gap-2 px-4 py-3 bg-cyan-600 text-white rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-cyan-700 transition"
+                            >
+                              <Calendar size={16} /> Schedule OA
+                            </button>
+                          )}
+                          {(app.status === 'Shortlisted' || app.status === 'OA Scheduled' || app.status === 'Interview Scheduled') && (
+                            <button
+                              onClick={() => scheduleApplicationEvent(selectedJob._id, idx, 'interview')}
+                              className="flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 text-white rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-indigo-700 transition"
+                            >
+                              <Calendar size={16} /> Schedule Interview
+                            </button>
+                          )}
+                          {app.status !== 'Rejected' && (
+                            <button
+                              onClick={() => updateApplicationStatus(selectedJob._id, idx, 'Rejected')}
+                              className="flex items-center justify-center gap-2 px-4 py-3 bg-white border border-slate-200 text-pink-600 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-pink-50 transition"
+                            >
+                              <XCircle size={16} /> Reject
+                            </button>
+                          )}
+                          <button
+                            onClick={() => updateApplicationStatus(selectedJob._id, idx, 'Under Review')}
+                            className="flex items-center justify-center gap-2 px-4 py-3 bg-slate-900 text-white rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-800 transition"
+                          >
+                            <ArrowUpRight size={16} /> Review
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </motion.div>
+            </div>
+          )}
+
           {showCreateModal && (
             <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
               <motion.div

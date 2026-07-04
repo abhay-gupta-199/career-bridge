@@ -18,6 +18,10 @@ const COMMON_SKILLS = {
   tailwind: ['tailwind', 'tailwindcss', 'tailwind css'],
   bootstrap: ['bootstrap'],
   redux: ['redux'],
+  'ui/ux': ['ui/ux', 'ui ux', 'ux/ui', 'ux', 'uiux'],
+  'version control': ['version control', 'source control', 'git version control'],
+  'debugging': ['debugging', 'debug', 'debugger'],
+  'oop': ['oop', 'oops', 'object oriented programming', 'object-oriented programming', 'object oriented design'],
   'next.js': ['next.js', 'nextjs', 'next js'],
 
   // Backend
@@ -265,9 +269,9 @@ function categorizeSkills(skills = []) {
     database: ['mysql', 'postgresql', 'mongodb', 'redis', 'elasticsearch', 'dynamodb', 'cassandra', 'firebase', 'sqlite', 'oracle'],
     devops: ['aws', 'azure', 'google cloud', 'docker', 'kubernetes', 'jenkins', 'ci/cd', 'git', 'terraform', 'ansible', 'nginx'],
     testing: ['jest', 'pytest', 'mocha', 'junit', 'selenium', 'cypress'],
-    tools: ['linux', 'windows', 'mac', 'jira', 'confluence', 'slack', 'postman', 'figma', 'webpack', 'npm', 'yarn', 'bash'],
+    tools: ['linux', 'windows', 'mac', 'jira', 'confluence', 'slack', 'postman', 'figma', 'webpack', 'npm', 'yarn', 'bash', 'version control', 'debugging'],
     dataml: ['machine learning', 'data science', 'tensorflow', 'pytorch', 'pandas', 'numpy', 'sklearn'],
-    other: ['agile', 'data structures']
+    other: ['agile', 'data structures', 'ui/ux', 'oop']
   };
 
   skills.forEach(skill => {

@@ -69,8 +69,9 @@ def ats_skill_pipeline(resume_path: str, jd_text: str, skills_csv_path: str) -> 
     # Step 3: Calculate match analysis
     print("\n🔍 Step 3: Skill Matching Analysis...")
     jd_skills = list(jd_skills_with_weights.keys())
-    matched = [s for s in jd_skills if s in resume_skills]
-    missing = [s for s in jd_skills if s not in resume_skills]
+    resume_set = set(s.lower() for s in resume_skills)
+    matched = [s for s in jd_skills if s.lower() in resume_set]
+    missing = [s for s in jd_skills if s.lower() not in resume_set]
     
     print(f"✅ Matched Skills: {len(matched)}/{len(jd_skills)}")
     if matched:

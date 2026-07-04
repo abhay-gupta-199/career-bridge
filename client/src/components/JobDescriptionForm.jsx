@@ -78,7 +78,7 @@ const JobDescriptionForm = ({ onJobCreated }) => {
       setLoading(true);
       setError(null);
 
-      const response = await API.post('/api/skills/extract-job-skills', {
+      const response = await API.post('/skills/extract-job-skills', {
         title: formData.title,
         description: formData.description,
         requirements: formData.requirements,
@@ -117,11 +117,11 @@ const JobDescriptionForm = ({ onJobCreated }) => {
       setSuccess(false);
 
       // Create job
-      const jobResponse = await API.post('/api/owner/jobs', formData);
+      const jobResponse = await API.post('/owner/jobs', formData);
       const jobId = jobResponse.data.data._id;
 
       // Parse skills for the created job
-      await API.post(`/api/skills/parse-job/${jobId}`);
+      await API.post(`/skills/parse-job/${jobId}`);
 
       setSuccess(true);
       setFormData({

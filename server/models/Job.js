@@ -89,8 +89,18 @@ const jobSchema = new mongoose.Schema({
     },
     status: {
       type: String,
-      enum: ["Applied", "Under Review", "Accepted", "Rejected"],
+      enum: ["Applied", "Under Review", "Shortlisted", "OA Scheduled", "Interview Scheduled", "Accepted", "Rejected"],
       default: "Applied"
+    },
+    oaSchedule: {
+      date: { type: Date },
+      scheduledBy: { type: String, trim: true },
+      note: { type: String, trim: true }
+    },
+    interviewSchedule: {
+      date: { type: Date },
+      scheduledBy: { type: String, trim: true },
+      note: { type: String, trim: true }
     }
   }]
   ,
